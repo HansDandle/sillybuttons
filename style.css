@@ -1,0 +1,88 @@
+
+body {
+    background: linear-gradient(135deg, #6ec6f7 0%, #f9f871 100%);
+    min-height: 100vh;
+    margin: 0;
+    font-family: 'Comic Sans MS', 'Comic Sans', cursive, sans-serif;
+}
+
+.nautical-bg {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background:
+        url('images/1357556.jpg') center center/cover no-repeat,
+        url('https://pngimg.com/d/anchor_PNG72.png') repeat-y left center,
+        url('https://pngimg.com/d/anchor_PNG72.png') repeat-y right center;
+    background-size:
+        cover,
+        80px auto,
+        80px auto;
+}
+
+.nautical-title {
+    color: #1e88e5;
+    text-shadow: 2px 2px 0 #fff, 4px 4px 0 #1e88e5;
+    margin-bottom: 2rem;
+    font-size: 3rem;
+    letter-spacing: 2px;
+}
+
+.container {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    background: rgba(255,255,255,0.7);
+    border-radius: 2rem;
+    padding: 2rem 3rem;
+    box-shadow: 0 8px 32px rgba(30,136,229,0.15);
+}
+
+
+.sillyButton {
+    font-size: 2.2rem;
+    padding: 1.5rem 3rem;
+    background: #ffb347;
+    border: 4px solid #1e88e5;
+    border-radius: 2rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s, border 0.2s;
+    animation: bounce 2s infinite;
+    color: #1e88e5;
+    font-weight: bold;
+    outline: none;
+}
+
+
+.sillyButton:hover {
+    background: #ffcc80;
+    border: 4px solid #f9f871;
+    transform: scale(1.1) rotate(-3deg);
+    animation: shake 0.4s;
+}
+/* Strobe effect for nautical fun */
+.strobe {
+    animation: strobe-bg 0.1s alternate 10;
+}
+
+@keyframes strobe-bg {
+    0% { background: #fff700; }
+    100% { background: #1e88e5; }
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+}
+
+@keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    50% { transform: translateX(8px); }
+    75% { transform: translateX(-8px); }
+    100% { transform: translateX(0); }
+}
