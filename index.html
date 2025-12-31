@@ -1,3 +1,38 @@
+    <!-- Admin Add Button/Link Form (hidden by default) -->
+    <div id="adminFormContainer" style="display:none; position:fixed; top:10%; left:50%; transform:translateX(-50%); background:#fff; border:2px solid #0077b6; border-radius:12px; padding:1.5rem; z-index:2000; box-shadow:0 4px 24px rgba(0,0,0,0.18);">
+        <h2>Add a New Button or Treasure Link</h2>
+        <form id="adminForm">
+            <label>
+                Type:
+                <select id="adminType">
+                    <option value="button">Silly Button</option>
+                    <option value="treasure">Treasure Chest Link</option>
+                </select>
+            </label><br><br>
+            <label>
+                Label/Name:<br>
+                <input type="text" id="adminLabel" required>
+            </label><br><br>
+            <label>
+                URL:<br>
+                <input type="url" id="adminUrl" required>
+            </label><br><br>
+            <button type="submit">Add</button>
+            <button type="button" id="adminCancel">Cancel</button>
+        </form>
+    </div>
+    <!-- Admin Login Prompt -->
+    <div id="adminLoginContainer" style="display:none; position:fixed; top:20%; left:50%; transform:translateX(-50%); background:#fff; border:2px solid #0077b6; border-radius:12px; padding:1.5rem; z-index:2000; box-shadow:0 4px 24px rgba(0,0,0,0.18);">
+        <h2>Admin Login</h2>
+        <form id="adminLoginForm">
+            <label>Password: <input type="password" id="adminPassword" required></label>
+            <button type="submit">Login</button>
+        </form>
+        <div id="adminLoginError" style="color:red; display:none;">Wrong password!</div>
+    </div>
+    <!-- Show Admin Button (hidden, reveal with secret code) -->
+    <button id="showAdminBtn" style="display:none; position:fixed; bottom:16px; right:16px; z-index:3000; padding:1em 1.5em; font-size:1.2em; border-radius:50px; background:#0077b6; color:#fff; border:none; box-shadow:0 2px 8px rgba(0,0,0,0.12); touch-action:manipulation;">Admin</button>
+    <!-- script.js moved to end of body for proper DOM loading -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,43 +42,46 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <img src="images/trasurechest.png" alt="Treasure Chest" class="treasure-chest fixed-chest" tabindex="0">
+    <div class="bubbles fixed-bubbles">
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+    </div>
+    <div class="treasure-popup" id="treasurePopup">
+        <h2>Treasure Links!</h2>
+        <ul>
+            <li><a href="https://paint.toys/" target="_blank">🎨 Paint Toys</a></li>
+            <li><a href="https://maze.toys/mazes/mini/daily/" target="_blank">🧩 Daily Mini Maze</a></li>
+            <li><a href="https://optical.toys/" target="_blank">👁️ Optical Toys</a></li>
+            <li><a href="https://theuselessweb.com/" target="_blank">🌀 The Useless Web</a></li>
+            <li><a href="https://pointerpointer.com/" target="_blank">👉 Pointer Pointer</a></li>
+        </ul>
+        <button id="closeTreasure">Close</button>
+    </div>
+    <button class="open-whackamole fixed-whackamole" id="openWhackamole">Play Whack-a-Sea-Creature!</button>
+    <div id="whackamole-game" class="whackamole-container" style="display:none;">
+        <h2>Whack-a-Sea-Creature!</h2>
+        <div class="scoreboard">Score: <span id="wm-score">0</span></div>
+        <div class="wm-grid">
+            <div class="wm-hole" data-index="0"></div>
+            <div class="wm-hole" data-index="1"></div>
+            <div class="wm-hole" data-index="2"></div>
+            <div class="wm-hole" data-index="3"></div>
+            <div class="wm-hole" data-index="4"></div>
+            <div class="wm-hole" data-index="5"></div>
+        </div>
+        <button id="wm-start">Start Game</button>
+        <button id="wm-close">Close</button>
+    </div>
     <div class="nautical-bg">
-        <img src="images/trasurechest.png" alt="Treasure Chest" class="treasure-chest" tabindex="0">
-        <div class="bubbles">
-            <div class="bubble"></div>
-            <div class="bubble"></div>
-            <div class="bubble"></div>
-            <div class="bubble"></div>
-            <div class="bubble"></div>
-        </div>
-        <div class="treasure-popup" id="treasurePopup">
-            <h2>Treasure Links!</h2>
-            <ul>
-                <li><a href="https://paint.toys/" target="_blank">🎨 Paint Toys</a></li>
-                <li><a href="https://maze.toys/mazes/mini/daily/" target="_blank">🧩 Daily Mini Maze</a></li>
-                <li><a href="https://optical.toys/" target="_blank">👁️ Optical Toys</a></li>
-                <li><a href="https://theuselessweb.com/" target="_blank">🌀 The Useless Web</a></li>
-                <li><a href="https://pointerpointer.com/" target="_blank">👉 Pointer Pointer</a></li>
-            </ul>
-            <button id="closeTreasure">Close</button>
-        </div>
-                <button class="open-whackamole" id="openWhackamole">Play Whack-a-Sea-Creature!</button>
-                <div id="whackamole-game" class="whackamole-container" style="display:none;">
-                    <h2>Whack-a-Sea-Creature!</h2>
-                    <div class="scoreboard">Score: <span id="wm-score">0</span></div>
-                    <div class="wm-grid">
-                        <div class="wm-hole" data-index="0"></div>
-                        <div class="wm-hole" data-index="1"></div>
-                        <div class="wm-hole" data-index="2"></div>
-                        <div class="wm-hole" data-index="3"></div>
-                        <div class="wm-hole" data-index="4"></div>
-                        <div class="wm-hole" data-index="5"></div>
-                    </div>
-                    <button id="wm-start">Start Game</button>
-                    <button id="wm-close">Close</button>
-                </div>
-                <div class="container abstract-layout">
-            <h1 class="nautical-title">Spongey Silly Buttons!</h1>
+        <!-- Guess the Number Game -->
+        <!-- Guess the Number Game (moved to bottom) -->
+        <!-- End Guess the Number Game -->
+        <div class="container abstract-layout">
+            <h1 class="nautical-title">Silly Buttons</h1>
             <div class="button-link-pair" style="position:relative; left:0; top:0;">
                 <div class="sound-label">Quack</div>
                 <button class="sillyButton">Click Me!</button>
@@ -73,10 +111,48 @@
                 <div class="sound-label">Squish</div>
                 <button class="sillyButton">Squish!</button>
                 <div class="button-link"><span>Destination: </span><span class="site-label"></span></div>
+                <style>
+                    /* Move squish button even higher for more space above the number game */
+                    .button-link-pair:last-of-type { top: -40px !important; }
+                </style>
             </div>
         </div>
         <audio id="sillySound" preload="auto"></audio>
     </div>
+    <!-- Guess the Number Game at bottom -->
+    <div id="guess-number-game" class="guess-number-container" style="max-width:400px;margin:2rem auto 2rem auto;padding:1.5rem;background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.12);border:2px solid #0077b6;">
+        <h2>Guess the Number!</h2>
+        <p>Pick a number between 1 and 5:</p>
+        <input type="number" id="guessInput" min="1" max="10" style="width:60px;">
+        <button id="guessBtn">Guess</button>
+        <div id="guessResult" style="margin-top:1em;font-weight:bold;"></div>
+        <div>Streak: <span id="guessStreak">0</span></div>
+    </div>
+    <!-- Magic Eight Ball Game at bottom -->
+    <div id="eight-ball-game" class="eight-ball-container" style="max-width:400px;margin:2rem auto 2rem auto;padding:1.5rem;background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.12);border:2px solid #0077b6;">
+        <h2>Magic Eight Ball</h2>
+        <p>Ask a yes/no question:</p>
+        <input type="text" id="eightBallInput" style="width:70%;">
+        <button id="eightBallBtn">Ask</button>
+        <div id="eightBallResult" style="margin-top:1em;font-weight:bold;"></div>
+    </div>
+    <!-- Knock Knock Joke Generator at bottom -->
+    <div id="knock-knock-game" class="knock-knock-container" style="max-width:400px;margin:2rem auto 2rem auto;padding:1.5rem;background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.12);border:2px solid #0077b6;">
+        <h2>Knock Knock Joke Generator</h2>
+        <button id="knockKnockBtn">Tell Me a Joke</button>
+        <div id="knockKnockResult" style="margin-top:1em;font-weight:bold;"></div>
+    </div>
+    <!-- Word Scramble Game at bottom -->
+    <div id="word-scramble-game" class="word-scramble-container" style="max-width:400px;margin:2rem auto 2rem auto;padding:1.5rem;background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.12);border:2px solid #0077b6;">
+        <h2>Word Scramble</h2>
+        <div id="scrambleWord" style="font-size:1.3em;margin-bottom:1em;"></div>
+        <input type="text" id="scrambleInput" style="width:70%;">
+        <button id="scrambleBtn">Guess</button>
+        <button id="scrambleHintBtn" style="margin-left:1em;">Hint</button>
+        <div id="scrambleResult" style="margin-top:1em;font-weight:bold;"></div>
+        <div id="scrambleHint" style="margin-top:0.5em;color:#0077b6;font-style:italic;"></div>
+    </div>
+    <script src="script.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

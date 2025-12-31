@@ -1,3 +1,34 @@
+// --- Custom Items (localStorage) logic ---
+function renderCustomItems() {
+    let items = JSON.parse(localStorage.getItem('customItems') || '[]');
+    // Add buttons
+    const container = document.querySelector('.container.abstract-layout');
+    if (container) {
+        // Remove old custom buttons
+        container.querySelectorAll('.custom-button-link-pair').forEach(el => el.remove());
+        items.filter(i => i.type === 'button').forEach(i => {
+            const div = document.createElement('div');
+            div.className = 'button-link-pair custom-button-link-pair';
+            div.innerHTML = `<div class="sound-label">Custom</div><button class="sillyButton">${i.label}</button><div class="button-link"><span>Destination: </span><span class="site-label">${i.label}</span></div>`;
+            container.appendChild(div);
+        });
+    }
+    // Add treasure links
+    const treasureList = document.querySelector('.treasure-popup ul');
+    if (treasureList) {
+        // Remove old custom links
+        treasureList.querySelectorAll('.custom-treasure-link').forEach(el => el.remove());
+        items.filter(i => i.type === 'treasure').forEach(i => {
+            const li = document.createElement('li');
+            li.className = 'custom-treasure-link';
+            li.innerHTML = `<a href="${i.url}" target="_blank">✨ ${i.label}</a>`;
+            treasureList.appendChild(li);
+        });
+    }
+}
+
+// Always render custom items on page load
+renderCustomItems();
 // Whack-a-Sea-Creature game logic
 const whackamoleGame = document.getElementById('whackamole-game');
 const openWhackamole = document.getElementById('openWhackamole');
@@ -107,23 +138,14 @@ const kidSites = [
     "https://www.bouncingdvdlogo.com/",
     "https://www.zoomquilt.org/",
     "https://www.fallingfalling.com/",
-    "https://www.rrrgggbbb.com/",
     "https://www.eyebleach.me/",
     "https://www.drawastickman.com/",
     "https://www.thatsthefinger.com/",
     "https://www.froggyandthebull.com/",
-    "https://www.rrrgggbbb.com/",
-    "https://www.ouaismaisbon.ch/",
-    "https://www.veryverynice.com/",
-    "https://www.ouaismaisbon.ch/",
-    "https://www.koalastothemax.com/",
-    "https://www.rrrgggbbb.com/",
-    "https://www.silkmoth.club/",
-    "https://www.bouncingdvdlogo.com/",
+    "https://www.youtube.com/@HydraulicPressChannel",
     "https://www.zoomquilt.org/",
     "https://www.pointerpointer.com/",
     "https://www.fallingfalling.com/",
-    "https://www.catslap.com/",
     "https://www.eyebleach.me/",
     "https://www.drawastickman.com/"
 ];
@@ -146,10 +168,244 @@ const sillySounds = [
     {file: 'sounds/squish-sound-effect.mp3', label: 'Squish'},
 ];
 
-// Assign a random site to each button and display it
+// --- Guess the Number Game Logic ---
+const guessBtn = document.getElementById('guessBtn');
+const guessInput = document.getElementById('guessInput');
+const guessResult = document.getElementById('guessResult');
+const guessStreak = document.getElementById('guessStreak');
+const guessGameContainer = document.getElementById('guess-number-game');
+
+// Correct and incorrect sound files
+const guessCorrectSound = 'sounds/spongebob-laugh.mp3';
+const guessWrongSounds = [
+    'sounds/spongebob-squarepants-wa-wa-wa.mp3',
+    'sounds/sponge-bob-disgusting.mp3',
+    'sounds/mr-krabss-smallest-violin-voice-only.mp3'
+];
+
+let guessStreakValue = 0;
+
+function playGuessSound(src) {
+    sound.src = src;
+    sound.currentTime = 0;
+    sound.play();
+}
+
+if (guessBtn && guessInput && guessResult && guessStreak) {
+    guessBtn.addEventListener('click', () => {
+        const userGuess = parseInt(guessInput.value, 10);
+        if (isNaN(userGuess) || userGuess < 1 || userGuess > 5) {
+            guessResult.textContent = 'Please enter a number from 1 to 5.';
+            guessResult.style.color = 'red';
+            return;
+        }
+        const randomNum = Math.floor(Math.random() * 5) + 1;
+        if (userGuess === randomNum) {
+            guessResult.textContent = `Correct! The number was ${randomNum}.`;
+            guessResult.style.color = 'green';
+            guessStreakValue++;
+            guessStreak.textContent = guessStreakValue;
+            playGuessSound(guessCorrectSound);
+        } else {
+            guessResult.textContent = `Wrong! The number was ${randomNum}. Try again.`;
+            guessResult.style.color = 'red';
+            guessStreakValue = 0;
+            guessStreak.textContent = guessStreakValue;
+            const wrongSound = guessWrongSounds[Math.floor(Math.random() * guessWrongSounds.length)];
+            playGuessSound(wrongSound);
+        }
+    });
+}
+
+// --- Magic Eight Ball Game Logic ---
+const eightBallBtn = document.getElementById('eightBallBtn');
+const eightBallInput = document.getElementById('eightBallInput');
+const eightBallResult = document.getElementById('eightBallResult');
+
+const eightBallResponses = [
+    'Yes!',
+    'No.',
+    'Maybe...NOT!',
+    'For Fritz? Anything is possible!',
+    'Definitely!',
+    'Absolutely not.',
+    'It is certain.',
+    'Very doubtful.',
+    'Not sure, I am ust a computer.',
+    'Squirrel!',
+    'My sources say yes.',
+    'Ask your mom',
+    'Brainfart - try again.'
+];
+
+if (eightBallBtn && eightBallInput && eightBallResult) {
+    eightBallBtn.addEventListener('click', () => {
+        const question = eightBallInput.value.trim();
+        if (!question) {
+            eightBallResult.textContent = 'Please ask a yes/no question!';
+            eightBallResult.style.color = 'red';
+            return;
+        }
+        const response = eightBallResponses[Math.floor(Math.random() * eightBallResponses.length)];
+        eightBallResult.textContent = response;
+        eightBallResult.style.color = '#0077b6';
+    });
+}
+
+    // --- Knock Knock Joke Generator Logic ---
+    const knockKnockBtn = document.getElementById('knockKnockBtn');
+    const knockKnockResult = document.getElementById('knockKnockResult');
+
+    const knockKnockJokes = [
+        {who: 'Lettuce', punch: 'Lettuce in, it’s cold out here!'},
+        {who: 'Tank', punch: 'You’re welcome.'},
+        {who: 'Boo', punch: 'Don’t cry, it’s just a joke!'},
+        {who: 'Atch', punch: 'Bless you!'},
+        {who: 'Harry', punch: 'Harry up and answer the door!'},
+        {who: 'Olive', punch: 'Olive you and I miss you!'},
+        {who: 'Cow says', punch: 'No, a cow says moooo!'},
+        {who: 'Interrupting cow', punch: 'MOO!'},
+        {who: 'Dishes', punch: 'Dishes the police, open up!'},
+        {who: 'Annie', punch: 'Annie thing you can do, I can do too!'},
+        {who: 'Ice cream', punch: 'Ice cream every time I see a scary movie!'},
+        {who: 'Broken pencil', punch: 'Never mind, it’s pointless.'},
+        {who: 'Spell', punch: 'W-H-O.'},
+        {who: 'Nobel', punch: 'No bell, that’s why I knocked!'}
+    ];
+
+    if (knockKnockBtn && knockKnockResult) {
+        knockKnockBtn.addEventListener('click', () => {
+            const joke = knockKnockJokes[Math.floor(Math.random() * knockKnockJokes.length)];
+            knockKnockResult.innerHTML = `<div>Knock, knock.<br>Who’s there?<br>${joke.who}.<br>${joke.who} who?<br>${joke.punch}</div>`;
+            knockKnockResult.style.color = '#0077b6';
+        });
+    }
+
+    // --- Word Scramble Game Logic ---
+
+    const scrambleWords = [
+        'banana', 'computer', 'silly', 'button', 'ocean', 'jellyfish', 'spongebob', 'krabby', 'treasure', 'whale', 'octopus', 'starfish', 'bubble', 'pirate', 'seashell', 'anchor', 'submarine', 'coral', 'plankton', 'chumbucket'
+    ];
+
+    const scrambleDefinitions = {
+        banana: 'A long curved fruit with a yellow skin.',
+        computer: 'An electronic device for storing and processing data.',
+        silly: 'Showing lack of good sense or judgment.',
+        button: 'A small disk or knob sewn onto a garment.',
+        ocean: 'A large body of salt water that covers most of the Earth.',
+        jellyfish: 'A sea creature with a soft, jelly-like body and tentacles.',
+        spongebob: 'A famous cartoon sea sponge who lives in a pineapple under the sea.',
+        krabby: 'Related to the Krabby Patty, a burger from SpongeBob.',
+        treasure: 'A quantity of precious metals, gems, or other valuable objects.',
+        whale: 'A very large marine mammal.',
+        octopus: 'A sea animal with eight arms.',
+        starfish: 'A sea animal with five arms shaped like a star.',
+        bubble: 'A thin sphere of liquid enclosing air or gas.',
+        pirate: 'A person who attacks and robs ships at sea.',
+        seashell: 'The shell of a marine mollusk.',
+        anchor: 'A heavy object used to moor a vessel to the sea bottom.',
+        submarine: 'A watercraft capable of independent operation underwater.',
+        coral: 'A hard, stony substance formed by marine animals.',
+        plankton: 'Tiny marine organisms that drift in the sea.',
+        chumbucket: 'Plankton\'s restaurant in SpongeBob SquarePants.'
+    };
+
+    function shuffleWord(word) {
+        const arr = word.split('');
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr.join('');
+    }
+
+    const scrambleWordDiv = document.getElementById('scrambleWord');
+    const scrambleInput = document.getElementById('scrambleInput');
+    const scrambleBtn = document.getElementById('scrambleBtn');
+    const scrambleResult = document.getElementById('scrambleResult');
+
+    let currentWord = '';
+const scrambleHintBtn = document.getElementById('scrambleHintBtn');
+const scrambleHint = document.getElementById('scrambleHint');
+
+    function newScramble() {
+        currentWord = scrambleWords[Math.floor(Math.random() * scrambleWords.length)];
+        scrambleWordDiv.textContent = shuffleWord(currentWord);
+        scrambleInput.value = '';
+        scrambleResult.textContent = '';
+        if (scrambleHint) scrambleHint.textContent = '';
+    }
+
+    if (scrambleBtn && scrambleInput && scrambleWordDiv && scrambleResult) {
+        newScramble();
+        scrambleBtn.addEventListener('click', () => {
+            const guess = scrambleInput.value.trim().toLowerCase();
+            if (!guess) {
+                scrambleResult.textContent = 'Type your guess!';
+                scrambleResult.style.color = 'red';
+                return;
+            }
+            if (guess === currentWord) {
+                scrambleResult.textContent = 'Correct!';
+                scrambleResult.style.color = 'green';
+                setTimeout(newScramble, 1200);
+            } else {
+                scrambleResult.textContent = 'Try again!';
+                scrambleResult.style.color = 'red';
+            }
+        });
+        if (scrambleHintBtn && scrambleHint) {
+            scrambleHintBtn.addEventListener('click', () => {
+                scrambleHint.textContent = scrambleDefinitions[currentWord] || 'No hint available.';
+            });
+        }
+    }
+
+
+// Friendly names for common destinations (by hostname)
+const friendlyNames = {
+    'pbskids.org': 'PBS Kids',
+    'coolmathgames.com': 'Cool Math Games',
+    'nationalgeographickids.com': 'National Geographic Kids',
+    'funbrain.com': 'Funbrain',
+    'sesamestreet.org': 'Sesame Street',
+    'starfall.com': 'Starfall',
+    'switchzoo.com': 'Switch Zoo',
+    'pointerpointer.com': 'Pointer Pointer',
+    'rainymood.com': 'Rainy Mood',
+    'theuselessweb.com': 'The Useless Web',
+    'koalastothemax.com': 'Koalas to the Max',
+    'bouncingdvdlogo.com': 'Bouncing DVD Logo',
+    'zoomquilt.org': 'Zoomquilt',
+    'shadyurl.com': 'Shady URL',
+    'fallingfalling.com': 'Falling Falling',
+    'catslap.com': 'Cat Slap',
+    'rrrgggbbb.com': 'RRRGGGBBB',
+    'staggeringbeauty.com': 'Staggering Beauty',
+    'eyebleach.me': 'Eyebleach',
+    'drawastickman.com': 'Draw a Stickman',
+    'sanger.dk': 'Sanger.dk',
+    'thatsthefinger.com': "That's the Finger",
+    'patience-is-a-virtue.org': 'Patience is a Virtue',
+    'froggyandthebull.com': 'Froggy and the Bull',
+    'ouaismaisbon.ch': 'Ouais Mais Bon',
+    'veryverynice.com': 'Very Very Nice',
+    'silkmoth.club': 'Silkmoth Club'
+};
+
+function getFriendlyName(url) {
+    try {
+        const host = (new URL(url)).hostname.replace(/^www\./, '');
+        return friendlyNames[host] || host;
+    } catch (e) {
+        return url;
+    }
+}
+
+// Assign a random site to each button and display a friendly name
 const assignedSites = Array.from({length: buttons.length}, () => kidSites[Math.floor(Math.random() * kidSites.length)]);
 siteLabels.forEach((label, i) => {
-    label.textContent = assignedSites[i];
+    label.textContent = getFriendlyName(assignedSites[i]);
 });
 // Set sound label text above each button (for robustness)
 soundLabels.forEach((label, i) => {

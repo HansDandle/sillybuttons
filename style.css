@@ -1,5 +1,133 @@
-.whackamole-cursor {
-    cursor: url('images/hammer.png'), pointer !important;
+/* Fixed floating elements for viewport */
+.fixed-whackamole {
+    position: fixed;
+    right: 24px;
+    top: 24px;
+    z-index: 1100;
+    box-shadow: 0 2px 8px rgba(30,136,229,0.18);
+}
+.fixed-chest {
+    position: fixed;
+    left: 8px;
+    bottom: 45px;
+    width: 170px;
+    max-width: 32vw;
+    min-width: 200px;
+    z-index: 1100;
+    box-shadow: 0 2px 8px rgba(30,136,229,0.18);
+    transition: width 0.2s;
+}
+.fixed-bubbles {
+    position: fixed;
+    left: 56px;
+    bottom: 140px;
+    z-index: 1101;
+    pointer-events: none;
+}
+@media (max-width: 600px) {
+    .fixed-whackamole {
+        right: 8px;
+        top: 8px;
+        font-size: 1rem;
+        padding: 0.5rem 1rem;
+    }
+    .fixed-chest {
+        left: 4px;
+        bottom: 8px;
+        width: 70px;
+        min-width: 40px;
+    }
+    .fixed-bubbles {
+        left: 24px;
+        bottom: 70px;
+    }
+}
+@media (max-width: 600px) {
+    .nautical-title {
+        font-size: 1.8rem;
+        margin-top: 0.6rem;
+        line-height: 1.1;
+        padding: 0 1rem;
+        text-align: center;
+    }
+    .fixed-whackamole {
+        right: 8px;
+        top: 8px;
+        font-size: 1rem;
+        padding: 0.5rem 1rem;
+    }
+    .fixed-chest {
+        left: 4px;
+        bottom: 8px;
+        width: 70px;
+        min-width: 40px;
+    }
+    .fixed-bubbles {
+        left: 24px;
+        bottom: 70px;
+    }
+}
+
+/* Responsive title sizing for medium screens */
+@media (min-width: 601px) and (max-width: 1000px) {
+    .nautical-title {
+        font-size: 2.4rem;
+        margin-bottom: 1.5rem;
+    }
+    .nautical-bg {
+        padding-top: 80px;
+    }
+}
+
+/* Mobile / small-screen layout improvements */
+@media (max-width: 800px) {
+    /* make background padding smaller so content is visible */
+    .nautical-bg { padding-top: 56px; background-position: center top; }
+
+    /* stack the abstract layout vertically and remove inline offsets */
+    .abstract-layout { min-height: auto; min-width: auto; gap: 1.2rem; padding: 1rem; }
+    .button-link-pair {
+        position: static !important;
+        left: auto !important;
+        top: auto !important;
+        transform: none !important;
+        margin: 0.6rem auto !important;
+        width: calc(100% - 2rem) !important;
+        max-width: 420px;
+        align-items: center;
+    }
+
+    /* smaller buttons for mobile */
+    .sillyButton {
+        font-size: 1.6rem;
+        padding: 1rem 1.6rem;
+        border-radius: 1.2rem;
+    }
+
+    .sound-label { font-size: 1rem; margin-bottom: 0.3rem; }
+    .button-link { font-size: 0.95rem; padding: 0.4rem 0.8rem; }
+
+    /* treasure and controls spacing on mobile */
+    .fixed-whackamole { right: 10px; top: 8px; }
+    .fixed-chest { left: 8px; bottom: 8px; width: 86px; }
+    .fixed-bubbles { left: 40px; bottom: 88px; }
+
+    /* hide large decorative anchors on the sides to save space */
+    .nautical-bg { background-position: center top; }
+
+    /* whackamole popup full width on mobile */
+    .whackamole-container { left: 50%; transform: translate(-50%, -50%); width: calc(100% - 32px); max-width: 420px; }
+}
+
+/* Extra small screens tweak */
+@media (max-width: 600px) {
+    .fixed-chest {
+        left: 2px;
+        bottom: 4px;
+        width: 120px;
+        min-width: 60px;
+        max-width: 60vw;
+    }
 }
 /* Whack-a-Sea-Creature game styles */
 .open-whackamole {
@@ -107,7 +235,7 @@
     left: 10px;
     top: 50%;
     transform: translateY(-50%);
-    width: 180px;
+    width: 240px;
     height: auto;
     cursor: pointer;
     z-index: 1001;
@@ -305,6 +433,7 @@ body {
         cover,
         80px auto,
         80px auto;
+    padding-top: 100px; /* prevent fixed header overlap */
 }
 
 .nautical-title {
@@ -370,4 +499,31 @@ body {
     50% { transform: translateX(8px); }
     75% { transform: translateX(-8px); }
     100% { transform: translateX(0); }
+}
+
+/* Ensure fixed variants override non-fixed rules that appear later in the file */
+.open-whackamole.fixed-whackamole {
+    position: fixed !important;
+    right: 24px !important;
+    top: 24px !important;
+    z-index: 1100 !important;
+}
+.treasure-chest.fixed-chest {
+    position: fixed !important;
+    left: 16px !important;
+    bottom: 24px !important;
+    top: auto !important;
+    transform: none !important;
+    width: 200px !important;
+    max-width: 32vw !important;
+    min-width: 120px !important;
+    z-index: 1100 !important;
+}
+.bubbles.fixed-bubbles {
+    position: fixed !important;
+    left: 56px !important;
+    bottom: 140px !important;
+    top: auto !important;
+    z-index: 1101 !important;
+    pointer-events: none !important;
 }
