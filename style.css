@@ -1,3 +1,288 @@
+.whackamole-cursor {
+    cursor: url('images/hammer.png'), pointer !important;
+}
+/* Whack-a-Sea-Creature game styles */
+.open-whackamole {
+    position: absolute;
+    right: 40px;
+    top: 60px;
+    background: #1e88e5;
+    color: #fff;
+    font-size: 1.3rem;
+    border: none;
+    border-radius: 1.2rem;
+    padding: 0.7rem 2rem;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(30,136,229,0.12);
+    z-index: 1002;
+    transition: background 0.2s;
+}
+.open-whackamole:hover {
+    background: #1565c0;
+}
+
+.whackamole-container {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: #e3f2fd;
+    border: 4px solid #1e88e5;
+    border-radius: 2rem;
+    box-shadow: 0 8px 32px rgba(30,136,229,0.18);
+    padding: 2.5rem 3rem 2rem 3rem;
+    z-index: 3000;
+    min-width: 350px;
+    text-align: center;
+    cursor: url('images/hammer.png'), pointer;
+}
+.whackamole-container h2 {
+    margin-top: 0;
+    color: #1e88e5;
+    font-size: 2rem;
+}
+.scoreboard {
+    font-size: 1.3rem;
+    margin-bottom: 1.2rem;
+    color: #1565c0;
+}
+.wm-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 80px);
+    grid-gap: 18px;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+.wm-hole {
+    width: 80px;
+    height: 80px;
+    background: #fffbe7;
+    border: 3px solid #ffb347;
+    border-radius: 50%;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(30,136,229,0.08);
+    transition: background 0.2s;
+}
+.wm-hole.active {
+    background: #b3e5fc;
+}
+.wm-creature {
+    position: absolute;
+    left: 50%;
+    top: 60%;
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 60px;
+    background: url('images/swhead.png') center/contain no-repeat;
+    animation: pop-up 0.3s;
+    cursor: pointer;
+    z-index: 1;
+}
+@keyframes pop-up {
+    0% { transform: translate(-50%, 100%); }
+    100% { transform: translate(-50%, -50%); }
+}
+#wm-start, #wm-close {
+    background: #ffb347;
+    border: none;
+    border-radius: 1rem;
+    padding: 0.5rem 1.5rem;
+    font-size: 1.1rem;
+    color: #1e88e5;
+    font-weight: bold;
+    cursor: pointer;
+    margin: 0 0.5rem;
+    box-shadow: 0 2px 8px rgba(30,136,229,0.08);
+    transition: background 0.2s;
+}
+#wm-start:hover, #wm-close:hover {
+    background: #ffe082;
+}
+/* Treasure chest styling */
+
+.treasure-chest {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 180px;
+    height: auto;
+    cursor: pointer;
+    z-index: 1001;
+    filter: drop-shadow(0 4px 12px #1e88e5aa);
+    transition: transform 0.2s;
+}
+.treasure-chest:active, .treasure-chest:focus {
+    transform: translateY(-50%) scale(1.12) rotate(-8deg);
+}
+
+/* Bubbles animation */
+.bubbles {
+    position: absolute;
+    left: 70px;
+    top: 30%;
+    pointer-events: none;
+    z-index: 1002;
+}
+.bubble {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 22px;
+    height: 22px;
+    background: rgba(173, 216, 230, 0.7);
+    border-radius: 50%;
+    animation: bubble-rise 3s linear infinite;
+    opacity: 0.7;
+    border: 2px solid #b3e5fc;
+}
+.bubble:nth-child(2) {
+    left: 30px;
+    width: 16px;
+    height: 16px;
+    animation-delay: 1s;
+    opacity: 0.5;
+}
+.bubble:nth-child(3) {
+    left: 60px;
+    width: 12px;
+    height: 12px;
+    animation-delay: 2s;
+    opacity: 0.4;
+}
+.bubble:nth-child(4) {
+    left: 90px;
+    width: 18px;
+    height: 18px;
+    animation-delay: 1.5s;
+    opacity: 0.6;
+}
+.bubble:nth-child(5) {
+    left: 120px;
+    width: 10px;
+    height: 10px;
+    animation-delay: 2.5s;
+    opacity: 0.3;
+}
+@keyframes bubble-rise {
+    0% {
+        transform: translateY(0) scale(1);
+        opacity: 0.7;
+    }
+    80% {
+        opacity: 0.8;
+    }
+    100% {
+        transform: translateY(-120px) scale(1.2);
+        opacity: 0;
+    }
+}
+
+.treasure-popup {
+    display: none;
+    position: fixed;
+    left: 120px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #fffbe7;
+    border: 4px solid #ffb347;
+    border-radius: 1.5rem;
+    box-shadow: 0 8px 32px rgba(30,136,229,0.18);
+    padding: 2rem 2.5rem 1.5rem 2.5rem;
+    z-index: 2000;
+    min-width: 260px;
+    text-align: center;
+}
+.treasure-popup h2 {
+    margin-top: 0;
+    color: #e67e22;
+    font-size: 2rem;
+}
+.treasure-popup ul {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0 1.5rem 0;
+}
+.treasure-popup li {
+    margin: 0.7rem 0;
+    font-size: 1.2rem;
+}
+.treasure-popup a {
+    color: #1e88e5;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.2s;
+}
+.treasure-popup a:hover {
+    color: #e67e22;
+    text-decoration: underline;
+}
+#closeTreasure {
+    background: #ffb347;
+    border: none;
+    border-radius: 1rem;
+    padding: 0.5rem 1.5rem;
+    font-size: 1.1rem;
+    color: #1e88e5;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(30,136,229,0.08);
+    transition: background 0.2s;
+}
+#closeTreasure:hover {
+    background: #ffe082;
+}
+.abstract-layout {
+    position: relative;
+    min-height: 600px;
+    min-width: 500px;
+    align-items: flex-start;
+    gap: 0;
+}
+
+.button-link-pair {
+    margin-bottom: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 300px;
+}
+
+.button-link {
+    margin-top: 0.7rem;
+    font-size: 1.1rem;
+    color: #1e88e5;
+    background: rgba(255,255,255,0.7);
+    border-radius: 1rem;
+    padding: 0.3rem 1rem;
+    box-shadow: 0 2px 8px rgba(30,136,229,0.08);
+    word-break: break-all;
+}
+/* Glitter explosion effect */
+.glitter-explosion {
+    position: fixed;
+    width: 80px;
+    height: 80px;
+    pointer-events: none;
+    z-index: 9999;
+    animation: glitter-pop 1.2s ease-out forwards;
+    background: radial-gradient(circle at 40% 40%, #fff 0%, #f9f871 30%, #1e88e5 60%, #ffb347 100%);
+    border-radius: 50%;
+    box-shadow:
+        0 0 16px 8px #fff,
+        0 0 32px 16px #f9f871,
+        0 0 24px 12px #1e88e5,
+        0 0 12px 6px #ffb347;
+    opacity: 0.85;
+}
+
+@keyframes glitter-pop {
+    0% { transform: scale(0.2) rotate(0deg); opacity: 1; }
+    60% { transform: scale(1.2) rotate(180deg); opacity: 1; }
+    100% { transform: scale(0.8) rotate(360deg); opacity: 0; }
+}
 
 body {
     background: linear-gradient(135deg, #6ec6f7 0%, #f9f871 100%);
