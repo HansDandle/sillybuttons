@@ -8,11 +8,11 @@
 }
 .fixed-chest {
     position: fixed;
-    left: 8px;
-    bottom: 45px;
-    width: 170px;
-    max-width: 32vw;
-    min-width: 200px;
+    right: 24px;
+    top: 90px;
+    width: 90px;
+    max-width: 18vw;
+    min-width: 70px;
     z-index: 1100;
     box-shadow: 0 2px 8px rgba(30,136,229,0.18);
     transition: width 0.2s;
@@ -89,6 +89,9 @@
     .button-link-pair {
         position: static !important;
         left: auto !important;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
         top: auto !important;
         transform: none !important;
         margin: 0.6rem auto !important;
@@ -231,14 +234,13 @@
 /* Treasure chest styling */
 
 .treasure-chest {
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 240px;
+    position: fixed;
+    right: 24px;
+    top: 90px;
+    width: 90px;
     height: auto;
     cursor: pointer;
-    z-index: 1001;
+    z-index: 1100;
     filter: drop-shadow(0 4px 12px #1e88e5aa);
     transition: transform 0.2s;
 }
@@ -365,8 +367,8 @@
 .abstract-layout {
     position: relative;
     min-height: 600px;
-    min-width: 500px;
-    align-items: flex-start;
+  max-width: 100%;
+      align-items: flex-start;
     gap: 0;
 }
 
@@ -442,6 +444,7 @@ body {
     margin-bottom: 2rem;
     font-size: 3rem;
     letter-spacing: 2px;
+    text-align: center;
 }
 
 .container {
@@ -480,7 +483,7 @@ body {
 }
 /* Strobe effect for nautical fun */
 .strobe {
-    animation: strobe-bg 0.1s alternate 10;
+    animation: strobe-bg 0.1s alternate 50;
 }
 
 @keyframes strobe-bg {
@@ -509,15 +512,7 @@ body {
     z-index: 1100 !important;
 }
 .treasure-chest.fixed-chest {
-    position: fixed !important;
-    left: 16px !important;
-    bottom: 24px !important;
-    top: auto !important;
-    transform: none !important;
-    width: 200px !important;
-    max-width: 32vw !important;
-    min-width: 120px !important;
-    z-index: 1100 !important;
+    /* Removed conflicting rules. Use .fixed-chest for positioning. */
 }
 .bubbles.fixed-bubbles {
     position: fixed !important;

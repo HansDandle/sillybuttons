@@ -9,8 +9,15 @@ function renderCustomItems() {
         items.filter(i => i.type === 'button').forEach(i => {
             const div = document.createElement('div');
             div.className = 'button-link-pair custom-button-link-pair';
-            div.innerHTML = `<div class="sound-label">Custom</div><button class="sillyButton">${i.label}</button><div class="button-link"><span>Destination: </span><span class="site-label">${i.label}</span></div>`;
+            div.innerHTML = `<div class="sound-label">Custom</div><button class="sillyButton">${i.label}</button><div class="button-link"><span>Destination: </span><span class="site-label">${i.url}</span></div>`;
             container.appendChild(div);
+            // Add click handler to custom button
+            const btn = div.querySelector('.sillyButton');
+            if (btn) {
+                btn.addEventListener('click', () => {
+                    window.location.href = i.url;
+                });
+            }
         });
     }
     // Add treasure links
@@ -128,22 +135,18 @@ const kidSites = [
     "https://www.coolmathgames.com/",
     "https://www.nationalgeographickids.com/",
     "https://www.funbrain.com/",
-    "https://www.sesamestreet.org/",
+    "https://musiclab.chromeexperiments.com/Song-Maker/",
     "https://www.starfall.com/",
     "https://www.switchzoo.com/",
     "https://pointerpointer.com/",
     "https://www.rainymood.com/",
     "https://www.theuselessweb.com/",
-    "https://www.koalastothemax.com/",
-    "https://www.bouncingdvdlogo.com/",
     "https://www.zoomquilt.org/",
     "https://www.fallingfalling.com/",
     "https://www.eyebleach.me/",
     "https://www.drawastickman.com/",
     "https://www.thatsthefinger.com/",
-    "https://www.froggyandthebull.com/",
     "https://www.youtube.com/@HydraulicPressChannel",
-    "https://www.zoomquilt.org/",
     "https://www.pointerpointer.com/",
     "https://www.fallingfalling.com/",
     "https://www.eyebleach.me/",
@@ -470,3 +473,91 @@ buttons.forEach((button, i) => {
         }
     });
 });
+
+// --- Admin Login Wheel Button Logic ---
+const adminWheelBtn = document.getElementById('adminWheelBtn');
+const adminLoginContainer = document.getElementById('adminLoginContainer');
+const adminLoginForm = document.getElementById('adminLoginForm');
+const adminLoginError = document.getElementById('adminLoginError');
+
+if (adminWheelBtn && adminLoginContainer && adminLoginForm) {
+    // Show login form on click or keyboard
+    const showLogin = () => {
+        adminLoginContainer.style.display = 'block';
+        adminLoginError.style.display = 'none';
+        // Focus password input for accessibility
+        const pwInput = document.getElementById('adminPassword');
+        if (pwInput) setTimeout(() => pwInput.focus(), 100);
+    };
+    adminWheelBtn.addEventListener('click', showLogin);
+    adminWheelBtn.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') showLogin();
+    });
+    // Hide login form on successful login or cancel
+    adminLoginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const pw = document.getElementById('adminPassword').value;
+        if (pw === 'uncledan') {
+            adminLoginContainer.style.display = 'none';
+            adminLoginError.style.display = 'none';
+            // Show admin add form
+            const adminFormContainer = document.getElementById('adminFormContainer');
+            if (adminFormContainer) adminFormContainer.style.display = 'block';
+        } else {
+            adminLoginError.style.display = 'block';
+        }
+    });
+    // Optional: Hide login on outside click
+    adminLoginContainer.addEventListener('click', function(e) {
+        if (e.target === adminLoginContainer) {
+            adminLoginContainer.style.display = 'none';
+        }
+    });
+}
+
+// --- Admin Add Button/Link Form Logic ---
+const adminFormContainer = document.getElementById('adminFormContainer');
+const adminForm = document.getElementById('adminForm');
+const adminCancel = document.getElementById('adminCancel');
+const adminUrl = document.getElementById('adminUrl');
+if (adminFormContainer && adminForm && adminCancel && adminUrl) {
+    // Add paste button next to URL input
+    if (!document.getElementById('adminPasteBtn')) {
+        const pasteBtn = document.createElement('button');
+        pasteBtn.type = 'button';
+        pasteBtn.id = 'adminPasteBtn';
+        pasteBtn.textContent = 'Paste';
+        pasteBtn.style.marginLeft = '0.5em';
+        adminUrl.parentNode.appendChild(pasteBtn);
+        pasteBtn.addEventListener('click', async () => {
+            try {
+                const text = await navigator.clipboard.readText();
+                adminUrl.value = text;
+            } catch (err) {
+                alert('Could not read clipboard');
+            }
+        });
+    }
+    // Hide form on cancel
+    adminCancel.addEventListener('click', () => {
+        adminFormContainer.style.display = 'none';
+    });
+    // Handle add
+    adminForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const type = document.getElementById('adminType').value;
+        const label = document.getElementById('adminLabel').value.trim();
+        let url = adminUrl.value.trim();
+        // Allow domain-only input
+        if (!/^https?:\/\//i.test(url)) {
+            url = 'https://' + url;
+        }
+        // Save to localStorage
+        let items = JSON.parse(localStorage.getItem('customItems') || '[]');
+        items.push({ type, label, url });
+        localStorage.setItem('customItems', JSON.stringify(items));
+        renderCustomItems();
+        adminFormContainer.style.display = 'none';
+        adminForm.reset();
+    });
+}

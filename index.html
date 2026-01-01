@@ -15,7 +15,7 @@
             </label><br><br>
             <label>
                 URL:<br>
-                <input type="url" id="adminUrl" required>
+                <input type="text" id="adminUrl" required>
             </label><br><br>
             <button type="submit">Add</button>
             <button type="button" id="adminCancel">Cancel</button>
@@ -30,8 +30,8 @@
         </form>
         <div id="adminLoginError" style="color:red; display:none;">Wrong password!</div>
     </div>
-    <!-- Show Admin Button (hidden, reveal with secret code) -->
-    <button id="showAdminBtn" style="display:none; position:fixed; bottom:16px; right:16px; z-index:3000; padding:1em 1.5em; font-size:1.2em; border-radius:50px; background:#0077b6; color:#fff; border:none; box-shadow:0 2px 8px rgba(0,0,0,0.12); touch-action:manipulation;">Admin</button>
+    <!-- Floating Admin Wheel Button -->
+    <img id="adminWheelBtn" src="images/wheel.png" alt="Admin Login" style="position:fixed; bottom:16px; right:16px; z-index:3000; width:56px; height:56px; border-radius:50%; box-shadow:0 2px 8px rgba(0,0,0,0.12); background:#fff; cursor:pointer; touch-action:manipulation;" tabindex="0">
     <!-- script.js moved to end of body for proper DOM loading -->
 <!DOCTYPE html>
 <html lang="en">
@@ -42,7 +42,6 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <img src="images/trasurechest.png" alt="Treasure Chest" class="treasure-chest fixed-chest" tabindex="0">
     <div class="bubbles fixed-bubbles">
         <div class="bubble"></div>
         <div class="bubble"></div>
@@ -53,7 +52,9 @@
     <div class="treasure-popup" id="treasurePopup">
         <h2>Treasure Links!</h2>
         <ul>
+            <li><a href="https://musiclab.chromeexperiments.com/Song-Maker/" target="_blank"> ♫♪ Song Maker</a></li>
             <li><a href="https://paint.toys/" target="_blank">🎨 Paint Toys</a></li>
+            <li><a href="https://magiclight.ai/" target="_blank"> 🎬 Make your own movie </a></li>
             <li><a href="https://maze.toys/mazes/mini/daily/" target="_blank">🧩 Daily Mini Maze</a></li>
             <li><a href="https://optical.toys/" target="_blank">👁️ Optical Toys</a></li>
             <li><a href="https://theuselessweb.com/" target="_blank">🌀 The Useless Web</a></li>
@@ -75,6 +76,9 @@
         </div>
         <button id="wm-start">Start Game</button>
         <button id="wm-close">Close</button>
+    </div>
+    <div style="width:100%; display:flex; justify-content:flex-end; margin-top:10px;">
+        <img src="images/trasurechest.png" alt="Treasure Chest" class="treasure-chest fixed-chest" tabindex="0">
     </div>
     <div class="nautical-bg">
         <!-- Guess the Number Game -->
@@ -131,7 +135,7 @@
     <!-- Magic Eight Ball Game at bottom -->
     <div id="eight-ball-game" class="eight-ball-container" style="max-width:400px;margin:2rem auto 2rem auto;padding:1.5rem;background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.12);border:2px solid #0077b6;">
         <h2>Magic Eight Ball</h2>
-        <p>Ask a yes/no question:</p>
+        <p>Ask a "yes or no" question:</p>
         <input type="text" id="eightBallInput" style="width:70%;">
         <button id="eightBallBtn">Ask</button>
         <div id="eightBallResult" style="margin-top:1em;font-weight:bold;"></div>
@@ -154,5 +158,7 @@
     </div>
     <script src="script.js"></script>
     <script src="script.js"></script>
+                <h3 class="nautical-subtitle">Page designed by Fritz M.</h3>
+
 </body>
 </html>
