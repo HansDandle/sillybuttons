@@ -45,16 +45,26 @@ function renderCustomItems() {
     if (container) {
         // Remove old custom buttons
         container.querySelectorAll('.custom-button-link-pair').forEach(el => el.remove());
-        items.filter(i => i.type === 'button').forEach(i => {
+        items.filter(i => i.type === 'button').forEach((i, idx) => {
             const div = document.createElement('div');
             div.className = 'button-link-pair custom-button-link-pair';
-            div.innerHTML = `<div class="sound-label">Custom</div><button class="sillyButton">${i.label}</button><div class="button-link"><span>Destination: </span><span class="site-label">${i.url}</span></div>`;
+            div.innerHTML = `<div class="sound-label">Custom</div><button class="sillyButton">${i.label}</button><div class="button-link"><span>Destination: </span><span class="site-label">${i.url}</span></div><button class="delete-btn" data-index="${idx}" style="margin-top:0.5rem; padding:0.3rem 0.8rem; font-size:0.9rem; background:#ff6b6b; color:white; border:none; border-radius:6px; cursor:pointer;">Delete</button>`;
             container.appendChild(div);
             // Add click handler to custom button
             const btn = div.querySelector('.sillyButton');
             if (btn) {
                 btn.addEventListener('click', () => {
                     window.location.href = i.url;
+                });
+            }
+            // Add delete handler
+            const deleteBtn = div.querySelector('.delete-btn');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (confirm(`Are you sure you want to delete "${i.label}"?`)) {
+                        deleteCustomLink(idx, i);
+                    }
                 });
             }
         });
@@ -64,10 +74,28 @@ function renderCustomItems() {
     if (treasureList) {
         // Remove old custom links
         treasureList.querySelectorAll('.custom-treasure-link').forEach(el => el.remove());
-        items.filter(i => i.type === 'treasure').forEach(i => {
+        items.filter(i => i.type === 'treasure').forEach((i, idx) => {
             const li = document.createElement('li');
             li.className = 'custom-treasure-link';
-            li.innerHTML = `<a href="${i.url}" target="_blank">✨ ${i.label}</a>`;
+            li.style.display = 'flex';
+            li.style.justifyContent = 'space-between';
+            li.style.alignItems = 'center';
+            li.style.paddingRight = '10px';
+            const link = document.createElement('a');
+            link.href = i.url;
+            link.target = '_blank';
+            link.textContent = `✨ ${i.label}`;
+            li.appendChild(link);
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = '✕';
+            deleteBtn.style.cssText = 'background:#ff6b6b; color:white; border:none; border-radius:4px; padding:0.2rem 0.4rem; cursor:pointer; font-size:0.9rem;';
+            deleteBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (confirm(`Are you sure you want to delete "${i.label}"?`)) {
+                    deleteCustomLink(idx, i);
+                }
+            });
+            li.appendChild(deleteBtn);
             treasureList.appendChild(li);
         });
     }
@@ -75,6 +103,36 @@ function renderCustomItems() {
 
 // Load custom items on startup (from localStorage for now)
 renderCustomItems();
+
+// Delete custom link function
+function deleteCustomLink(index, linkData) {
+    // Delete from localStorage
+    let items = JSON.parse(localStorage.getItem('customItems') || '[]');
+    items.splice(index, 1);
+    localStorage.setItem('customItems', JSON.stringify(items));
+    
+    // Try to delete from Supabase API (on production)
+    const password = document.getElementById('adminPassword')?.value;
+    if (password && linkData.id) {
+        fetch('/api/delete-link', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password, linkId: linkData.id })
+        })
+            .then(response => {
+                if (!response.ok) {
+                    console.warn('Could not delete from database');
+                }
+                return response.json().catch(() => null);
+            })
+            .catch(e => {
+                console.warn('Database delete failed (OK on localhost):', e.message);
+            });
+    }
+    
+    renderCustomItems();
+}
+
 // Whack-a-Sea-Creature game logic
 const whackamoleGame = document.getElementById('whackamole-game');
 const openWhackamole = document.getElementById('openWhackamole');
