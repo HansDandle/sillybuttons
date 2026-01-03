@@ -1,4 +1,28 @@
-// --- Custom Items (localStorage) logic ---
+// --- Supabase Configuration ---
+const SUPABASE_URL = 'https://ozpwwxbfmgxbitbzhsae.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_UFlEyPnpOTYr9zEqiQiqjA_UEBHHmLL';
+const { createClient } = window.supabase;
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// --- Custom Items (localStorage + Supabase) logic ---
+async function loadCustomLinksFromSupabase() {
+    try {
+        const { data, error } = await supabase
+            .from('custom_links')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (error) {
+            console.error('Error loading from Supabase:', error);
+            return [];
+        }
+        return data || [];
+    } catch (e) {
+        console.error('Supabase fetch failed:', e);
+        return [];
+    }
+}
+
 function renderCustomItems() {
     let items = JSON.parse(localStorage.getItem('customItems') || '[]');
     // Add buttons
@@ -34,7 +58,7 @@ function renderCustomItems() {
     }
 }
 
-// Always render custom items on page load
+// Load custom items on startup (from localStorage for now)
 renderCustomItems();
 // Whack-a-Sea-Creature game logic
 const whackamoleGame = document.getElementById('whackamole-game');
@@ -494,16 +518,31 @@ if (adminWheelBtn && adminLoginContainer && adminLoginForm) {
         if (e.key === 'Enter' || e.key === ' ') showLogin();
     });
     // Hide login form on successful login or cancel
-    adminLoginForm.addEventListener('submit', function(e) {
+    adminLoginForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         const pw = document.getElementById('adminPassword').value;
-        if (pw === 'uncledan') {
-            adminLoginContainer.style.display = 'none';
-            adminLoginError.style.display = 'none';
-            // Show admin add form
-            const adminFormContainer = document.getElementById('adminFormContainer');
-            if (adminFormContainer) adminFormContainer.style.display = 'block';
-        } else {
+        
+        // Verify password via API endpoint
+        try {
+            const response = await fetch('/api/verify-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: pw })
+            });
+            
+            if (response.ok) {
+                adminLoginContainer.style.display = 'none';
+                adminLoginError.style.display = 'none';
+                // Show admin add form
+                const adminFormContainer = document.getElementById('adminFormContainer');
+                if (adminFormContainer) adminFormContainer.style.display = 'block';
+            } else {
+                adminLoginError.textContent = 'Wrong password!';
+                adminLoginError.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            adminLoginError.textContent = 'Error verifying password. Try again.';
             adminLoginError.style.display = 'block';
         }
     });
@@ -552,10 +591,22 @@ if (adminFormContainer && adminForm && adminCancel && adminUrl) {
         if (!/^https?:\/\//i.test(url)) {
             url = 'https://' + url;
         }
-        // Save to localStorage
+        // Save to localStorage and Supabase
         let items = JSON.parse(localStorage.getItem('customItems') || '[]');
         items.push({ type, label, url });
         localStorage.setItem('customItems', JSON.stringify(items));
+        
+        // Also save to Supabase
+        supabase
+            .from('custom_links')
+            .insert([{ label, url, type }])
+            .then(({ data, error }) => {
+                if (error) {
+                    console.error('Error saving to Supabase:', error);
+                    alert('Saved locally but could not sync to database');
+                }
+            });
+        
         renderCustomItems();
         adminFormContainer.style.display = 'none';
         adminForm.reset();
