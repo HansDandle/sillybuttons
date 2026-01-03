@@ -19,6 +19,66 @@ if (document.readyState === 'loading') {
     initSupabase();
 }
 
+// --- Birthday Countdown Timer ---
+function updateBirthdayCountdown() {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    let birthday = new Date(currentYear, 4, 16); // May 16 (month is 0-indexed)
+    
+    // If birthday has already passed this year, count to next year's birthday
+    if (today > birthday) {
+        birthday = new Date(currentYear + 1, 4, 16);
+    }
+    
+    // Check if today is the birthday
+    if (today.getMonth() === 4 && today.getDate() === 16) {
+        // Show birthday message and GIF
+        const countdownDiv = document.getElementById('birthdayCountdown');
+        if (countdownDiv) countdownDiv.style.display = 'none';
+        
+        const birthdayModal = document.getElementById('birthdayModal');
+        if (birthdayModal) {
+            birthdayModal.style.display = 'block !important';
+            // Create overlay for the modal
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:3000;';
+            overlay.id = 'birthdayOverlay';
+            if (!document.getElementById('birthdayOverlay')) {
+                document.body.appendChild(overlay);
+            }
+        }
+    } else {
+        // Calculate time remaining
+        const timeRemaining = birthday - today;
+        const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+        
+        const countdownText = document.getElementById('countdownText');
+        if (countdownText) {
+            countdownText.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+        }
+        
+        // Make sure countdown is visible
+        const countdownDiv = document.getElementById('birthdayCountdown');
+        if (countdownDiv) countdownDiv.style.display = 'block';
+        
+        // Hide birthday modal if it was shown
+        const birthdayModal = document.getElementById('birthdayModal');
+        if (birthdayModal) birthdayModal.style.display = 'none';
+        
+        const overlay = document.getElementById('birthdayOverlay');
+        if (overlay) overlay.remove();
+    }
+}
+
+// Initialize countdown when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    updateBirthdayCountdown();
+    setInterval(updateBirthdayCountdown, 1000); // Update every second
+});
+
 // --- Custom Items (localStorage + Supabase) logic ---
 async function loadCustomLinksFromSupabase() {
     try {
