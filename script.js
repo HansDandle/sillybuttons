@@ -74,9 +74,25 @@ function updateBirthdayCountdown() {
 }
 
 // Initialize countdown when page loads
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     updateBirthdayCountdown();
     setInterval(updateBirthdayCountdown, 1000); // Update every second
+    
+    // Load custom links from Supabase when page loads
+    if (supabaseClient) {
+        try {
+            const supabaseLinks = await loadCustomLinksFromSupabase();
+            if (supabaseLinks && supabaseLinks.length > 0) {
+                console.log('Loaded from Supabase:', supabaseLinks);
+                localStorage.setItem('customItems', JSON.stringify(supabaseLinks));
+            }
+        } catch (e) {
+            console.log('Supabase load on startup failed, using localStorage');
+        }
+    }
+    
+    // Always render, whether from Supabase or localStorage
+    renderCustomItems();
 });
 
 // --- Custom Items (localStorage + Supabase) logic ---
@@ -160,9 +176,6 @@ function renderCustomItems() {
         });
     }
 }
-
-// Load custom items on startup (from localStorage for now)
-renderCustomItems();
 
 // Delete custom link function
 function deleteCustomLink(index, linkData) {
@@ -264,10 +277,12 @@ const treasurePopup = document.getElementById('treasurePopup');
 const closeTreasure = document.getElementById('closeTreasure');
 if (treasureChest && treasurePopup && closeTreasure) {
     treasureChest.addEventListener('click', () => {
+        renderCustomItems(); // Refresh items before opening
         treasurePopup.style.setProperty('display', 'block', 'important');
     });
     treasureChest.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
+            renderCustomItems(); // Refresh items before opening
             treasurePopup.style.setProperty('display', 'block', 'important');
         }
     });
@@ -760,10 +775,23 @@ if (adminFormContainer && adminForm && adminCancel && adminUrl) {
                     return null;
                 });
             })
-            .then(data => {
+            .then(async data => {
                 if (data && data.error) {
                     console.error('Error:', data.error);
                     alert('Database error: ' + data.error);
+                } else if (data) {
+                    // Successfully added to Supabase, reload from Supabase
+                    if (supabaseClient) {
+                        try {
+                            const supabaseLinks = await loadCustomLinksFromSupabase();
+                            if (supabaseLinks && supabaseLinks.length > 0) {
+                                localStorage.setItem('customItems', JSON.stringify(supabaseLinks));
+                                renderCustomItems();
+                            }
+                        } catch (e) {
+                            console.log('Could not reload from Supabase:', e);
+                        }
+                    }
                 }
             })
             .catch(e => {
