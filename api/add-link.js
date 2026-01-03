@@ -1,12 +1,20 @@
-import { createClient } from '@supabase/supabase-js';
+const { createClient } = require('@supabase/supabase-js');
 
 const SUPABASE_URL = 'https://ozpwwxbfmgxbitbzhsae.supabase.co';
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || 'sb_publishable_UFlEyPnpOTYr9zEqiQiqjA_UEBHHmLL';
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+if (!SUPABASE_KEY) {
+  throw new Error('SUPABASE_SERVICE_KEY environment variable is not set');
+}
+
+if (!ADMIN_PASSWORD) {
+  throw new Error('ADMIN_PASSWORD environment variable is not set');
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -45,4 +53,4 @@ export default async function handler(req, res) {
     console.error('Error adding link:', e);
     return res.status(500).json({ error: 'Server error', details: e.message });
   }
-}
+};

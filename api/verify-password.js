@@ -1,4 +1,4 @@
-export default function handler(req, res) {
+module.exports = function handler(req, res) {
   // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -18,4 +18,4 @@ export default function handler(req, res) {
   } else {
     return res.status(401).json({ success: false, error: 'Wrong password' });
   }
-}
+};
