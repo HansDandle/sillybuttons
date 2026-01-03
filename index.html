@@ -1,5 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silly Button!</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+</head>
+<body>
     <!-- Admin Add Button/Link Form (hidden by default) -->
-    <div id="adminFormContainer" style="display:none; position:fixed; top:10%; left:50%; transform:translateX(-50%); background:#fff; border:2px solid #0077b6; border-radius:12px; padding:1.5rem; z-index:2000; box-shadow:0 4px 24px rgba(0,0,0,0.18);">
+    <div id="adminFormContainer" style="display:none !important; position:fixed; top:10%; left:50%; transform:translateX(-50%); background:#fff; border:2px solid #0077b6; border-radius:12px; padding:1.5rem; z-index:2000; box-shadow:0 4px 24px rgba(0,0,0,0.18);">
         <h2>Add a New Button or Treasure Link</h2>
         <form id="adminForm">
             <label>
@@ -22,7 +33,7 @@
         </form>
     </div>
     <!-- Admin Login Prompt -->
-    <div id="adminLoginContainer" style="display:none; position:fixed; top:20%; left:50%; transform:translateX(-50%); background:#fff; border:2px solid #0077b6; border-radius:12px; padding:1.5rem; z-index:2000; box-shadow:0 4px 24px rgba(0,0,0,0.18);">
+    <div id="adminLoginContainer" style="display:none !important; position:fixed; top:20%; left:50%; transform:translateX(-50%); background:#fff; border:2px solid #0077b6; border-radius:12px; padding:1.5rem; z-index:2000; box-shadow:0 4px 24px rgba(0,0,0,0.18);">
         <h2>Admin Login</h2>
         <form id="adminLoginForm">
             <label>Password: <input type="password" id="adminPassword" required></label>
@@ -32,17 +43,6 @@
     </div>
     <!-- Floating Admin Wheel Button -->
     <img id="adminWheelBtn" src="images/wheel.png" alt="Admin Login" style="position:fixed; bottom:16px; right:16px; z-index:3000; width:56px; height:56px; border-radius:50%; box-shadow:0 2px 8px rgba(0,0,0,0.12); background:#fff; cursor:pointer; touch-action:manipulation;" tabindex="0">
-    <!-- script.js moved to end of body for proper DOM loading -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Silly Button!</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
-<body>
     <div class="bubbles fixed-bubbles">
         <div class="bubble"></div>
         <div class="bubble"></div>
@@ -50,7 +50,7 @@
         <div class="bubble"></div>
         <div class="bubble"></div>
     </div>
-    <div class="treasure-popup" id="treasurePopup">
+    <div class="treasure-popup" id="treasurePopup" style="display:none !important;">
         <h2>Treasure Links!</h2>
         <ul>
             <li><a href="https://musiclab.chromeexperiments.com/Song-Maker/" target="_blank"> ♫♪ Song Maker</a></li>
@@ -64,7 +64,7 @@
         <button id="closeTreasure">Close</button>
     </div>
     <button class="open-whackamole fixed-whackamole" id="openWhackamole">Play Whack-a-Sea-Creature!</button>
-    <div id="whackamole-game" class="whackamole-container" style="display:none;">
+    <div id="whackamole-game" class="whackamole-container" style="display:none !important;">
         <h2>Whack-a-Sea-Creature!</h2>
         <div class="scoreboard">Score: <span id="wm-score">0</span></div>
         <div class="wm-grid">
@@ -157,8 +157,7 @@
         <div id="scrambleResult" style="margin-top:1em;font-weight:bold;"></div>
         <div id="scrambleHint" style="margin-top:0.5em;color:#0077b6;font-style:italic;"></div>
     </div>
-    <script src="script.js"></script>
-    <script src="script.js"></script>
+    <script src="script.js?v=2"></script>
                 <h3 class="nautical-subtitle">Page designed by Fritz M.</h3>
 
 </body>

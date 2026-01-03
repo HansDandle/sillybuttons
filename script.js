@@ -1,13 +1,28 @@
 // --- Supabase Configuration ---
 const SUPABASE_URL = 'https://ozpwwxbfmgxbitbzhsae.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_UFlEyPnpOTYr9zEqiQiqjA_UEBHHmLL';
-const { createClient } = window.supabase;
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let supabaseClient;
+
+// Wait for Supabase SDK to be available
+function initSupabase() {
+    if (window.supabase && typeof window.supabase.createClient === 'function') {
+        const { createClient } = window.supabase;
+        supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+}
+
+// Try to initialize immediately, or wait for DOM to be ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSupabase);
+} else {
+    initSupabase();
+}
 
 // --- Custom Items (localStorage + Supabase) logic ---
 async function loadCustomLinksFromSupabase() {
     try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('custom_links')
             .select('*')
             .order('created_at', { ascending: false });
@@ -110,12 +125,12 @@ function startWhackamole() {
 
 if (openWhackamole && whackamoleGame) {
     openWhackamole.addEventListener('click', () => {
-        whackamoleGame.style.display = 'block';
+        whackamoleGame.style.setProperty('display', 'block', 'important');
     });
 }
 if (wmClose && whackamoleGame) {
     wmClose.addEventListener('click', () => {
-        whackamoleGame.style.display = 'none';
+        whackamoleGame.style.setProperty('display', 'none', 'important');
         wmGameActive = false;
         wmStart.disabled = false;
         if (wmTimeout) clearTimeout(wmTimeout);
@@ -131,15 +146,15 @@ const treasurePopup = document.getElementById('treasurePopup');
 const closeTreasure = document.getElementById('closeTreasure');
 if (treasureChest && treasurePopup && closeTreasure) {
     treasureChest.addEventListener('click', () => {
-        treasurePopup.style.display = 'block';
+        treasurePopup.style.setProperty('display', 'block', 'important');
     });
     treasureChest.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
-            treasurePopup.style.display = 'block';
+            treasurePopup.style.setProperty('display', 'block', 'important');
         }
     });
     closeTreasure.addEventListener('click', () => {
-        treasurePopup.style.display = 'none';
+        treasurePopup.style.setProperty('display', 'none', 'important');
     });
 }
 // Glitter explosion effect
@@ -507,8 +522,8 @@ const adminLoginError = document.getElementById('adminLoginError');
 if (adminWheelBtn && adminLoginContainer && adminLoginForm) {
     // Show login form on click or keyboard
     const showLogin = () => {
-        adminLoginContainer.style.display = 'block';
-        adminLoginError.style.display = 'none';
+        adminLoginContainer.style.setProperty('display', 'block', 'important');
+        adminLoginError.style.setProperty('display', 'none', 'important');
         // Focus password input for accessibility
         const pwInput = document.getElementById('adminPassword');
         if (pwInput) setTimeout(() => pwInput.focus(), 100);
@@ -522,7 +537,9 @@ if (adminWheelBtn && adminLoginContainer && adminLoginForm) {
         e.preventDefault();
         const pw = document.getElementById('adminPassword').value;
         
-        // Verify password via API endpoint
+        let isValid = false;
+        
+        // Try API endpoint first (for production on Vercel)
         try {
             const response = await fetch('/api/verify-password', {
                 method: 'POST',
@@ -531,25 +548,35 @@ if (adminWheelBtn && adminLoginContainer && adminLoginForm) {
             });
             
             if (response.ok) {
-                adminLoginContainer.style.display = 'none';
-                adminLoginError.style.display = 'none';
-                // Show admin add form
-                const adminFormContainer = document.getElementById('adminFormContainer');
-                if (adminFormContainer) adminFormContainer.style.display = 'block';
+                isValid = true;
             } else {
-                adminLoginError.textContent = 'Wrong password!';
-                adminLoginError.style.display = 'block';
+                // API failed or returned error - try local config.js fallback
+                if (typeof CONFIG !== 'undefined' && CONFIG.ADMIN_PASSWORD) {
+                    isValid = (pw === CONFIG.ADMIN_PASSWORD);
+                }
             }
         } catch (error) {
-            console.error('Login error:', error);
-            adminLoginError.textContent = 'Error verifying password. Try again.';
-            adminLoginError.style.display = 'block';
+            // Network error - try local config.js fallback
+            if (typeof CONFIG !== 'undefined' && CONFIG.ADMIN_PASSWORD) {
+                isValid = (pw === CONFIG.ADMIN_PASSWORD);
+            }
+        }
+        
+        if (isValid) {
+            adminLoginContainer.style.setProperty('display', 'none', 'important');
+            adminLoginError.style.setProperty('display', 'none', 'important');
+            // Show admin add form
+            const adminFormContainer = document.getElementById('adminFormContainer');
+            if (adminFormContainer) adminFormContainer.style.setProperty('display', 'block', 'important');
+        } else {
+            adminLoginError.textContent = 'Wrong password!';
+            adminLoginError.style.setProperty('display', 'block', 'important');
         }
     });
     // Optional: Hide login on outside click
     adminLoginContainer.addEventListener('click', function(e) {
         if (e.target === adminLoginContainer) {
-            adminLoginContainer.style.display = 'none';
+            adminLoginContainer.style.setProperty('display', 'none', 'important');
         }
     });
 }
@@ -597,7 +624,7 @@ if (adminFormContainer && adminForm && adminCancel && adminUrl) {
         localStorage.setItem('customItems', JSON.stringify(items));
         
         // Also save to Supabase
-        supabase
+        supabaseClient
             .from('custom_links')
             .insert([{ label, url, type }])
             .then(({ data, error }) => {
