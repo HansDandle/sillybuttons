@@ -618,20 +618,36 @@ if (adminFormContainer && adminForm && adminCancel && adminUrl) {
         if (!/^https?:\/\//i.test(url)) {
             url = 'https://' + url;
         }
-        // Save to localStorage and Supabase
+        // Get password from form
+        const password = document.getElementById('adminPassword').value;
+        
+        // Save to localStorage first
         let items = JSON.parse(localStorage.getItem('customItems') || '[]');
         items.push({ type, label, url });
         localStorage.setItem('customItems', JSON.stringify(items));
         
-        // Also save to Supabase
-        supabaseClient
-            .from('custom_links')
-            .insert([{ label, url, type }])
-            .then(({ data, error }) => {
-                if (error) {
-                    console.error('Error saving to Supabase:', error);
+        // Also save to API (which validates password and saves to Supabase)
+        fetch('/api/add-link', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password, label, url, type })
+        })
+            .then(response => {
+                if (!response.ok) {
+                    console.error('Failed to save to database');
                     alert('Saved locally but could not sync to database');
                 }
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    console.error('Error:', data.error);
+                    alert('Database error: ' + data.error);
+                }
+            })
+            .catch(e => {
+                console.error('Error saving to database:', e);
+                alert('Saved locally but could not sync to database');
             });
         
         renderCustomItems();
