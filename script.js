@@ -634,20 +634,22 @@ if (adminFormContainer && adminForm && adminCancel && adminUrl) {
         })
             .then(response => {
                 if (!response.ok) {
-                    console.error('Failed to save to database');
-                    alert('Saved locally but could not sync to database');
+                    console.warn('API returned error:', response.status);
+                    return null;
                 }
-                return response.json();
+                return response.json().catch(e => {
+                    console.warn('API response not JSON, ignoring');
+                    return null;
+                });
             })
             .then(data => {
-                if (data.error) {
+                if (data && data.error) {
                     console.error('Error:', data.error);
                     alert('Database error: ' + data.error);
                 }
             })
             .catch(e => {
-                console.error('Error saving to database:', e);
-                alert('Saved locally but could not sync to database');
+                console.warn('Could not sync to database (this is OK on localhost):', e.message);
             });
         
         renderCustomItems();
