@@ -98,6 +98,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 // --- Custom Items (localStorage + Supabase) logic ---
 async function loadCustomLinksFromSupabase() {
     try {
+        if (!supabaseClient) {
+            console.warn('Supabase client not initialized');
+            return [];
+        }
         const { data, error } = await supabaseClient
             .from('custom_links')
             .select('*')
@@ -107,6 +111,7 @@ async function loadCustomLinksFromSupabase() {
             console.error('Error loading from Supabase:', error);
             return [];
         }
+        console.log('Successfully loaded from Supabase:', data);
         return data || [];
     } catch (e) {
         console.error('Supabase fetch failed:', e);
@@ -116,6 +121,8 @@ async function loadCustomLinksFromSupabase() {
 
 function renderCustomItems() {
     let items = JSON.parse(localStorage.getItem('customItems') || '[]');
+    console.log('renderCustomItems - localStorage items:', items);
+    
     // Add buttons
     const container = document.querySelector('.container.abstract-layout');
     if (container) {
@@ -147,6 +154,8 @@ function renderCustomItems() {
     }
     // Add treasure links
     const treasureList = document.querySelector('.treasure-popup ul');
+    console.log('treasureList element found:', !!treasureList);
+    console.log('Treasure items to render:', items.filter(i => i.type === 'treasure'));
     if (treasureList) {
         // Remove old custom links
         treasureList.querySelectorAll('.custom-treasure-link').forEach(el => el.remove());
