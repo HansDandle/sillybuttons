@@ -575,3 +575,375 @@ body {
 .nautical-subtitle {
     text-align: center;
 }
+
+/* State Capitol Game Styling */
+.state-capitol-container {
+    animation: slideInUp 0.5s ease-out;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.capitol-option-btn {
+    transition: all 0.2s ease;
+}
+
+.capitol-option-btn:disabled {
+    cursor: not-allowed;
+}
+
+/* US Geography Game Styling */
+.geography-container {
+    animation: slideInUp 0.5s ease-out;
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: clamp(1rem, 4vw, 1.5rem);
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+    border: 2px solid #0077b6;
+}
+
+/* Mode selector: responsive button layout */
+.geo-mode-selector {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+    margin-top: 0;
+}
+
+.geo-mode-btn {
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
+    padding: clamp(0.6rem, 2vw, 0.8rem) clamp(1rem, 3vw, 1.5rem);
+    background: #0077b6;
+    color: white;
+    border: 2px solid #0077b6;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.geo-mode-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 119, 182, 0.3);
+}
+
+.geo-mode-btn:active {
+    transform: translateY(0);
+}
+
+/* Alternate state for inactive button */
+.geo-mode-btn:not(:first-child) {
+    background: #90caf9;
+    color: #0077b6;
+}
+
+/* Main layout: flex, responsive stacking */
+.geo-main-layout {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1rem, 4vw, 1.5rem);
+}
+
+/* Map section: responsive container */
+.geo-map-section {
+    width: 100%;
+    flex-shrink: 0;
+}
+
+.geo-map-container {
+    width: 100%;
+    max-height: 70vh;
+    aspect-ratio: 16 / 10;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #f5f5f5;
+    position: relative;
+}
+
+.geo-map-container svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* Controls section */
+.geo-controls-section {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1rem, 3vw, 1.5rem);
+    flex: 1;
+}
+
+/* Question text: responsive sizing */
+.geo-question {
+    font-size: clamp(1.1rem, 4vw, 1.5rem);
+    font-weight: bold;
+    text-align: center;
+    color: #0077b6;
+    min-height: 2em;
+    line-height: 1.4;
+}
+
+/* Answer grid: responsive columns */
+.geo-answers {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(0.75rem, 2vw, 1rem);
+}
+
+/* Individual answer button */
+.geo-answers button {
+    min-height: 44px;
+    padding: clamp(0.75rem, 2vw, 1rem);
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
+    background: #e3f2fd;
+    border: 2px solid #0077b6;
+    border-radius: 8px;
+    color: #0077b6;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    word-wrap: break-word;
+    line-height: 1.3;
+}
+
+.geo-answers button:hover {
+    background: #bbdefb;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 119, 182, 0.2);
+}
+
+.geo-answers button:active {
+    transform: translateY(0);
+}
+
+.geo-answers button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Feedback text */
+.geo-feedback {
+    text-align: center;
+    font-size: clamp(0.95rem, 3vw, 1.2rem);
+    font-weight: bold;
+    min-height: 1.5em;
+    line-height: 1.4;
+}
+
+/* Stats display */
+.geo-stats {
+    text-align: center;
+    color: #0077b6;
+    font-weight: bold;
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
+    display: flex;
+    justify-content: center;
+    gap: clamp(1rem, 5vw, 2rem);
+    flex-wrap: wrap;
+}
+
+/* Desktop layout: side-by-side */
+@media (min-width: 768px) {
+    .geo-main-layout {
+        flex-direction: row;
+        align-items: flex-start;
+    }
+    
+    .geo-map-section {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .geo-controls-section {
+        flex: 1;
+        min-width: 0;
+    }
+}
+
+/* Landscape orientation adjustments */
+@media (orientation: landscape) and (max-height: 600px) {
+    .geo-map-container {
+        max-height: 60vh;
+    }
+    
+    .geo-main-layout {
+        gap: 1rem;
+    }
+}
+
+/* Extra small screens */
+@media (max-width: 360px) {
+    .geography-container {
+        padding: 0.75rem;
+        border: 1px solid #0077b6;
+    }
+    
+    .geo-mode-selector {
+        margin-bottom: 1rem;
+        gap: 0.5rem;
+    }
+    
+    .geo-main-layout {
+        gap: 1rem;
+    }
+}
+
+/* Results Screen Styling */
+.geo-results-screen {
+    padding: clamp(1.5rem, 5vw, 2rem);
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.geo-results-title {
+    font-size: clamp(1.8rem, 5vw, 2.5rem);
+    color: #0077b6;
+    margin: clamp(1rem, 3vw, 1.5rem) 0 0.5rem 0;
+    font-weight: bold;
+}
+
+.geo-results-mode {
+    font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+    color: #666;
+    margin: 0 0 1.5rem 0;
+}
+
+.geo-score-summary {
+    background: linear-gradient(135deg, #e3f2fd 0%, #f0f8ff 100%);
+    padding: clamp(1.5rem, 4vw, 2rem);
+    border-radius: 12px;
+    margin: clamp(1rem, 3vw, 1.5rem) 0;
+    border: 2px solid #0077b6;
+}
+
+.geo-score-line {
+    font-size: clamp(1.1rem, 3vw, 1.4rem);
+    color: #0077b6;
+    margin: 0.8rem 0;
+    font-weight: bold;
+}
+
+.geo-score-correct {
+    color: #4caf50;
+    font-weight: bold;
+}
+
+.geo-score-accuracy {
+    color: #ff9800;
+    font-weight: bold;
+}
+
+.geo-score-streak {
+    color: #d32f2f;
+    font-weight: bold;
+}
+
+/* Missed States Section */
+.geo-missed-section {
+    text-align: left;
+    background: #fff9c4;
+    padding: clamp(1rem, 3vw, 1.5rem);
+    border-radius: 8px;
+    margin: clamp(1rem, 3vw, 1.5rem) 0;
+    border-left: 4px solid #fbc02d;
+}
+
+.geo-missed-section h3 {
+    color: #f57f17;
+    margin: 0 0 1rem 0;
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
+}
+
+.geo-missed-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+}
+
+.geo-missed-list li {
+    background: #fff;
+    padding: 0.8rem;
+    border-radius: 6px;
+    font-size: clamp(0.9rem, 2vw, 1rem);
+    color: #333;
+    border: 1px solid #fbc02d;
+}
+
+@media (max-width: 480px) {
+    .geo-missed-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Restart Buttons */
+.geo-restart-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1rem, 3vw, 1.5rem);
+    margin-top: clamp(2rem, 5vw, 2.5rem);
+}
+
+.geo-restart-btn {
+    min-height: 52px;
+    padding: clamp(1rem, 3vw, 1.2rem);
+    font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+    font-weight: bold;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.geo-restart-primary {
+    background: #0077b6;
+    color: white;
+}
+
+.geo-restart-primary:hover {
+    background: #005a94;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 119, 182, 0.3);
+}
+
+.geo-restart-primary:active {
+    transform: translateY(0);
+}
+
+.geo-restart-secondary {
+    background: #90caf9;
+    color: #0077b6;
+}
+
+.geo-restart-secondary:hover {
+    background: #64b5f6;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 119, 182, 0.2);
+}
+
+.geo-restart-secondary:active {
+    transform: translateY(0);
+}

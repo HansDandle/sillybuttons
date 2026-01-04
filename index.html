@@ -170,6 +170,35 @@
         <div id="scrambleResult" style="margin-top:1em;font-weight:bold;"></div>
         <div id="scrambleHint" style="margin-top:0.5em;color:#0077b6;font-style:italic;"></div>
     </div>
+    <!-- US Geography Game -->
+    <div id="geography-game" class="geography-container">
+        <h2 style="color:#0077b6;text-align:center;margin-top:0;">US Geography Challenge</h2>
+        
+        <!-- Mode selector -->
+        <div id="modeSelector" class="geo-mode-selector">
+            <button id="stateIdentifyBtn" class="geo-mode-btn" data-mode="state" style="font-weight:bold;">Identify the State</button>
+            <button id="capitalIdentifyBtn" class="geo-mode-btn" data-mode="capital" style="font-weight:bold;">Identify the Capital</button>
+        </div>
+
+        <!-- Main game layout: flex, responsive -->
+        <div class="geo-main-layout">
+            <!-- Map area -->
+            <div class="geo-map-section">
+                <div id="geoMapContainer" class="geo-map-container"></div>
+            </div>
+            
+            <!-- Controls section -->
+            <div class="geo-controls-section">
+                <div id="geoQuestion" class="geo-question"></div>
+                <div id="geoAnswers" class="geo-answers"></div>
+                <div id="geoFeedback" class="geo-feedback"></div>
+                <div class="geo-stats">
+                    <span>Streak: <span id="geoStreak">0</span></span>
+                    <span>Correct: <span id="geoCorrect">0</span></span>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Birthday Countdown Timer Box -->
     <div id="birthdayCountdown">
         <div id="countdownDisplay">Days until Fritz's Birthday: <span id="countdownText">Loading...</span></div>

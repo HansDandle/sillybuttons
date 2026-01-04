@@ -370,6 +370,17 @@ function playGuessSound(src) {
     sound.play();
 }
 
+function playGameSound(type) {
+    if (type === 'correct') {
+        // For geography game: play ding.mp3
+        sound.src = 'sounds/ding.mp3';
+    } else if (type === 'wrong') {
+        sound.src = guessWrongSounds[Math.floor(Math.random() * guessWrongSounds.length)];
+    }
+    sound.currentTime = 0;
+    sound.play();
+}
+
 if (guessBtn && guessInput && guessResult && guessStreak) {
     guessBtn.addEventListener('click', () => {
         const userGuess = parseInt(guessInput.value, 10);
@@ -807,3 +818,607 @@ if (adminFormContainer && adminForm && adminCancel && adminUrl) {
         adminForm.reset();
     });
 }
+
+// ============================================================================
+// US GEOGRAPHY GAME - Two modes: Identify State and Identify Capital
+// ============================================================================
+
+// State data with all 50 US states, capitals, and major cities
+const stateData = {
+    AL: { name: 'Alabama', capital: 'Montgomery', cities: ['Birmingham', 'Mobile', 'Huntsville'] },
+    AK: { name: 'Alaska', capital: 'Juneau', cities: ['Anchorage', 'Fairbanks', 'Ketchikan'] },
+    AZ: { name: 'Arizona', capital: 'Phoenix', cities: ['Mesa', 'Tucson', 'Scottsdale'] },
+    AR: { name: 'Arkansas', capital: 'Little Rock', cities: ['Fayetteville', 'Fort Smith', 'Jonesboro'] },
+    CA: { name: 'California', capital: 'Sacramento', cities: ['Los Angeles', 'San Francisco', 'San Diego'] },
+    CO: { name: 'Colorado', capital: 'Denver', cities: ['Colorado Springs', 'Aurora', 'Fort Collins'] },
+    CT: { name: 'Connecticut', capital: 'Hartford', cities: ['Bridgeport', 'New Haven', 'Waterbury'] },
+    DE: { name: 'Delaware', capital: 'Dover', cities: ['Wilmington', 'Newark', 'Middletown'] },
+    FL: { name: 'Florida', capital: 'Tallahassee', cities: ['Miami', 'Tampa', 'Orlando'] },
+    GA: { name: 'Georgia', capital: 'Atlanta', cities: ['Augusta', 'Savannah', 'Athens'] },
+    HI: { name: 'Hawaii', capital: 'Honolulu', cities: ['Hilo', 'Kailua', 'Kaneohe'] },
+    ID: { name: 'Idaho', capital: 'Boise', cities: ['Nampa', 'Pocatello', 'Meridian'] },
+    IL: { name: 'Illinois', capital: 'Springfield', cities: ['Chicago', 'Aurora', 'Rockford'] },
+    IN: { name: 'Indiana', capital: 'Indianapolis', cities: ['Fort Wayne', 'Evansville', 'South Bend'] },
+    IA: { name: 'Iowa', capital: 'Des Moines', cities: ['Cedar Rapids', 'Davenport', 'Sioux City'] },
+    KS: { name: 'Kansas', capital: 'Topeka', cities: ['Wichita', 'Kansas City', 'Lawrence'] },
+    KY: { name: 'Kentucky', capital: 'Frankfort', cities: ['Louisville', 'Lexington', 'Covington'] },
+    LA: { name: 'Louisiana', capital: 'Baton Rouge', cities: ['New Orleans', 'Shreveport', 'Lafayette'] },
+    ME: { name: 'Maine', capital: 'Augusta', cities: ['Portland', 'Lewiston', 'Bangor'] },
+    MD: { name: 'Maryland', capital: 'Annapolis', cities: ['Baltimore', 'Frederick', 'Gaithersburg'] },
+    MA: { name: 'Massachusetts', capital: 'Boston', cities: ['Worcester', 'Springfield', 'Cambridge'] },
+    MI: { name: 'Michigan', capital: 'Lansing', cities: ['Detroit', 'Grand Rapids', 'Warren'] },
+    MN: { name: 'Minnesota', capital: 'Saint Paul', cities: ['Minneapolis', 'Rochester', 'Duluth'] },
+    MS: { name: 'Mississippi', capital: 'Jackson', cities: ['Gulfport', 'Biloxi', 'Hattiesburg'] },
+    MO: { name: 'Missouri', capital: 'Jefferson City', cities: ['Kansas City', 'Saint Louis', 'Springfield'] },
+    MT: { name: 'Montana', capital: 'Helena', cities: ['Billings', 'Missoula', 'Great Falls'] },
+    NE: { name: 'Nebraska', capital: 'Lincoln', cities: ['Omaha', 'Bellevue', 'Grand Island'] },
+    NV: { name: 'Nevada', capital: 'Carson City', cities: ['Las Vegas', 'Henderson', 'Reno'] },
+    NH: { name: 'New Hampshire', capital: 'Concord', cities: ['Manchester', 'Nashua', 'Derry'] },
+    NJ: { name: 'New Jersey', capital: 'Trenton', cities: ['Newark', 'Jersey City', 'Paterson'] },
+    NM: { name: 'New Mexico', capital: 'Santa Fe', cities: ['Albuquerque', 'Las Cruces', 'Roswell'] },
+    NY: { name: 'New York', capital: 'Albany', cities: ['New York City', 'Buffalo', 'Rochester'] },
+    NC: { name: 'North Carolina', capital: 'Raleigh', cities: ['Charlotte', 'Greensboro', 'Durham'] },
+    ND: { name: 'North Dakota', capital: 'Bismarck', cities: ['Fargo', 'Grand Forks', 'Minot'] },
+    OH: { name: 'Ohio', capital: 'Columbus', cities: ['Cleveland', 'Cincinnati', 'Toledo'] },
+    OK: { name: 'Oklahoma', capital: 'Oklahoma City', cities: ['Tulsa', 'Norman', 'Broken Arrow'] },
+    OR: { name: 'Oregon', capital: 'Salem', cities: ['Portland', 'Eugene', 'Gresham'] },
+    PA: { name: 'Pennsylvania', capital: 'Harrisburg', cities: ['Philadelphia', 'Pittsburgh', 'Allentown'] },
+    RI: { name: 'Rhode Island', capital: 'Providence', cities: ['Warwick', 'Cranston', 'Pawtucket'] },
+    SC: { name: 'South Carolina', capital: 'Columbia', cities: ['Charleston', 'North Charleston', 'Greenville'] },
+    SD: { name: 'South Dakota', capital: 'Pierre', cities: ['Sioux Falls', 'Rapid City', 'Aberdeen'] },
+    TN: { name: 'Tennessee', capital: 'Nashville', cities: ['Memphis', 'Knoxville', 'Chattanooga'] },
+    TX: { name: 'Texas', capital: 'Austin', cities: ['Houston', 'Dallas', 'San Antonio'] },
+    UT: { name: 'Utah', capital: 'Salt Lake City', cities: ['Provo', 'West Valley City', 'Orem'] },
+    VT: { name: 'Vermont', capital: 'Montpelier', cities: ['Burlington', 'Rutland', 'Barre'] },
+    VA: { name: 'Virginia', capital: 'Richmond', cities: ['Virginia Beach', 'Arlington', 'Alexandria'] },
+    WA: { name: 'Washington', capital: 'Olympia', cities: ['Seattle', 'Spokane', 'Tacoma'] },
+    WV: { name: 'West Virginia', capital: 'Charleston', cities: ['Huntington', 'Parkersburg', 'Morgantown'] },
+    WI: { name: 'Wisconsin', capital: 'Madison', cities: ['Milwaukee', 'Green Bay', 'Kenosha'] },
+    WY: { name: 'Wyoming', capital: 'Cheyenne', cities: ['Casper', 'Laramie', 'Gillette'] }
+};
+
+let geoGameState = {
+    currentMode: 'state', // 'state' or 'capital'
+    currentState: null,
+    svgElement: null,
+    originalViewBox: null,
+    streak: 0,
+    correct: 0,
+    answered: false,
+    remainingStates: [], // Queue of remaining states to ask
+    // Round tracking
+    totalAsked: 0,
+    correctAnswers: 0,
+    incorrectAnswers: 0,
+    missedStates: [], // Store {code, name} of incorrect answers
+    // Streak tracking
+    currentStreak: 0,
+    longestStreak: 0
+};
+
+// Utility function: Fisher-Yates shuffle for uniform randomization
+function shuffle(array) {
+    const arr = [...array]; // Create a copy to avoid mutating original
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+// Build capital identification choices: correct capital + 2 same-state cities + 1 other capital
+function buildCapitalChoices(targetCode) {
+    const target = stateData[targetCode];
+    
+    // Get 2 random cities from same state (excluding capital)
+    const sameStateCities = shuffle(target.cities).slice(0, 2);
+    
+    // Get a random capital from a different state
+    const otherStateCodes = Object.keys(stateData).filter(code => code !== targetCode);
+    const randomOtherCode = otherStateCodes[Math.floor(Math.random() * otherStateCodes.length)];
+    const otherCapital = stateData[randomOtherCode].capital;
+    
+    // Combine: correct capital + 2 cities + 1 other capital
+    const choices = [target.capital, ...sameStateCities, otherCapital];
+    
+    // Shuffle all 4 choices
+    return shuffle(choices);
+}
+
+// Initialize or reset the state queue
+function resetStateQueue() {
+    geoGameState.remainingStates = Object.keys(stateData)
+        .sort(() => Math.random() - 0.5);
+}
+
+// Get next state from queue, reshuffle if needed
+function getNextState() {
+    if (geoGameState.remainingStates.length === 0) {
+        resetStateQueue();
+    }
+    return geoGameState.remainingStates.pop();
+}
+
+// Load and inject the SVG map
+function loadGeographySVG() {
+    const container = document.getElementById('geoMapContainer');
+    if (!container) return;
+
+    fetch('images/us.svg')
+        .then(response => response.text())
+        .then(svgText => {
+            const parser = new DOMParser();
+            const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
+            const svg = svgDoc.documentElement;
+            
+            // Set SVG dimensions
+            svg.setAttribute('width', '100%');
+            svg.setAttribute('height', '100%');
+            svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+            svg.style.cursor = 'pointer';
+            
+            // Add CSS styles for state paths
+            if (!document.getElementById('geo-svg-styles')) {
+                const style = document.createElement('style');
+                style.id = 'geo-svg-styles';
+                style.textContent = `
+                    #geoMapContainer svg path.state {
+                        fill: #e6e6e6 !important;
+                        stroke: #555 !important;
+                        stroke-width: 0.8 !important;
+                        vector-effect: non-scaling-stroke !important;
+                        transition: fill 0.2s ease, stroke 0.2s ease, stroke-width 0.2s ease !important;
+                    }
+                    
+                    #geoMapContainer svg path.state.active {
+                        fill: #d32f2f !important;
+                        stroke: #111 !important;
+                        stroke-width: 2 !important;
+                    }
+                    
+                    #geoMapContainer svg path.state.dimmed {
+                        fill: #f0f0f0 !important;
+                    }
+                    
+                    #geoMapContainer svg path.state:hover:not(.active) {
+                        fill: #c0c0c0 !important;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            // Store original viewBox for reset
+            geoGameState.originalViewBox = svg.getAttribute('viewBox');
+            geoGameState.svgElement = svg;
+            
+            // Set default styling for all state paths
+            svg.querySelectorAll('path').forEach(path => {
+                const stateCode = path.id;
+                if (stateCode in stateData) {
+                    // Remove any inline fill attributes
+                    path.removeAttribute('fill');
+                    path.style.fill = '';
+                    
+                    // Apply state class for CSS styling
+                    path.classList.add('state');
+                }
+            });
+            
+            container.innerHTML = '';
+            container.appendChild(svg);
+            
+            // Start first question
+            startGeographyQuestion();
+        })
+        .catch(err => console.error('Error loading SVG:', err));
+}
+
+// Determine if a state is small enough to warrant zooming
+function shouldZoom(stateEl, svg) {
+    const stateBox = stateEl.getBBox();
+    const svgBox = svg.viewBox.baseVal;
+    
+    const stateArea = stateBox.width * stateBox.height;
+    const svgArea = svgBox.width * svgBox.height;
+    
+    // Only zoom if state is less than 1.5% of the total SVG area
+    // This captures very small states like RI, CT, MA, NJ, DE, MD
+    return (stateArea / svgArea) < 0.015;
+}
+
+// Context-preserving zoom for small states
+// Keeps nearby states visible while enlarging the small state
+function zoomToSmallState(stateEl, svg) {
+    const box = stateEl.getBBox();
+    
+    // Use 2.5x padding (more conservative than 0.4x)
+    // This maintains regional context instead of isolating the state
+    const paddingX = box.width * 2.5;
+    const paddingY = box.height * 2.5;
+    
+    const newViewBox = `${box.x - paddingX} ${box.y - paddingY} ${box.width + paddingX * 2} ${box.height + paddingY * 2}`;
+    svg.setAttribute('viewBox', newViewBox);
+}
+
+// Highlight a state and conditionally zoom if it's small enough
+function highlightStateGeo(stateCode, gameMode = 'state') {
+    if (!geoGameState.svgElement) return;
+    
+    // Remove active and dimmed classes from all states
+    geoGameState.svgElement.querySelectorAll('path').forEach(path => {
+        path.classList.remove('active', 'dimmed');
+    });
+    
+    // Highlight current state
+    const statePath = document.getElementById(stateCode);
+    if (statePath) {
+        statePath.classList.add('active');
+        
+        // Dim all other states slightly for context
+        geoGameState.svgElement.querySelectorAll('path').forEach(path => {
+            if (path.id !== stateCode) {
+                path.classList.add('dimmed');
+            }
+        });
+        
+        // Conditionally zoom based on state size
+        // Only for 'state' identification mode with very small states
+        if (gameMode === 'state' && shouldZoom(statePath, geoGameState.svgElement)) {
+            zoomToSmallState(statePath, geoGameState.svgElement);
+        } else {
+            // Keep full US map in view for context
+            geoGameState.svgElement.setAttribute('viewBox', geoGameState.originalViewBox);
+        }
+    }
+}
+
+// Start a new geography question
+function startGeographyQuestion() {
+    geoGameState.answered = false;
+    document.getElementById('geoFeedback').textContent = '';
+    document.getElementById('geoFeedback').style.color = '';
+    
+    // Get next state from queue (no repeats until all 50 exhausted)
+    const randomCode = getNextState();
+    geoGameState.currentState = { abbr: randomCode, ...stateData[randomCode] };
+    
+    // Highlight state based on mode
+    highlightStateGeo(randomCode, geoGameState.currentMode);
+    
+    // Set question
+    const questionEl = document.getElementById('geoQuestion');
+    if (geoGameState.currentMode === 'state') {
+        questionEl.textContent = 'What state is this?';
+    } else {
+        questionEl.textContent = `What is the capital of ${geoGameState.currentState.name}?`;
+    }
+    
+    // Generate answer options (4 random)
+    const answers = generateGeographyAnswers();
+    renderGeographyAnswers(answers);
+}
+
+// Generate 4 answer options
+function generateGeographyAnswers() {
+    // For state identification: pick 3 random other state names
+    if (geoGameState.currentMode === 'state') {
+        const allStateNames = Object.values(stateData).map(s => s.name);
+        const correctAnswer = geoGameState.currentState.name;
+        
+        // Remove correct answer from pool
+        const otherStates = allStateNames.filter(name => name !== correctAnswer);
+        
+        // Pick 3 random others
+        const wrongAnswers = shuffle(otherStates).slice(0, 3);
+        
+        // Combine and shuffle
+        return shuffle([correctAnswer, ...wrongAnswers]);
+    } 
+    // For capital identification: use specialized choice builder
+    else {
+        return buildCapitalChoices(geoGameState.currentState.abbr);
+    }
+}
+
+// Render answer buttons
+function renderGeographyAnswers(answers) {
+    const container = document.getElementById('geoAnswers');
+    container.innerHTML = '';
+    
+    answers.forEach(answer => {
+        const btn = document.createElement('button');
+        btn.textContent = answer;
+        btn.style.fontSize = '1.1em';
+        btn.style.padding = '1rem';
+        btn.style.border = '2px solid #0077b6';
+        btn.style.borderRadius = '8px';
+        btn.style.background = '#fff';
+        btn.style.color = '#0077b6';
+        btn.style.cursor = 'pointer';
+        btn.style.fontWeight = 'bold';
+        btn.style.transition = 'all 0.2s';
+        
+        btn.addEventListener('mouseover', () => {
+            btn.style.background = '#e3f2fd';
+            btn.style.transform = 'scale(1.05)';
+        });
+        
+        btn.addEventListener('mouseout', () => {
+            btn.style.background = '#fff';
+            btn.style.transform = 'scale(1)';
+        });
+        
+        btn.addEventListener('click', () => checkGeographyAnswer(answer));
+        
+        container.appendChild(btn);
+    });
+}
+
+// Check if answer is correct
+function checkGeographyAnswer(answer) {
+    if (geoGameState.answered) return;
+    geoGameState.answered = true;
+    
+    const feedbackEl = document.getElementById('geoFeedback');
+    const correctAnswer = geoGameState.currentMode === 'state' 
+        ? geoGameState.currentState.name 
+        : geoGameState.currentState.capital;
+    
+    if (answer === correctAnswer) {
+        feedbackEl.textContent = '✓ Correct!';
+        feedbackEl.style.color = '#4caf50';
+        geoGameState.streak++;
+        geoGameState.correct++;
+        geoGameState.correctAnswers++;
+        geoGameState.currentStreak++;
+        geoGameState.longestStreak = Math.max(geoGameState.longestStreak, geoGameState.currentStreak);
+        playGameSound('correct');
+    } else {
+        feedbackEl.textContent = `✗ Wrong! The answer is ${correctAnswer}`;
+        feedbackEl.style.color = '#f44336';
+        geoGameState.streak = 0;
+        geoGameState.currentStreak = 0;
+        geoGameState.incorrectAnswers++;
+        // Track missed state
+        geoGameState.missedStates.push({
+            code: geoGameState.currentState.abbr,
+            name: geoGameState.currentState.name
+        });
+        playGameSound('wrong');
+    }
+    
+    geoGameState.totalAsked++;
+    
+    // Update stats
+    document.getElementById('geoStreak').textContent = geoGameState.streak;
+    document.getElementById('geoCorrect').textContent = geoGameState.correct;
+    
+    // Check if round is complete (all 50 states asked)
+    if (geoGameState.remainingStates.length === 0 && geoGameState.totalAsked === 50) {
+        // Show results screen after 2 seconds
+        setTimeout(() => {
+            showGeographyResults();
+        }, 2000);
+    } else {
+        // Reset map styling and load next question after 2 seconds
+        setTimeout(() => {
+            // Remove active and dimmed classes from all states
+            geoGameState.svgElement.querySelectorAll('path').forEach(path => {
+                path.classList.remove('active', 'dimmed');
+            });
+            // Reset viewBox to full US
+            geoGameState.svgElement.setAttribute('viewBox', geoGameState.originalViewBox);
+            startGeographyQuestion();
+        }, 2000);
+    }
+}
+
+// Initialize geography game
+function initGeographyGame() {
+    const stateBtn = document.getElementById('stateIdentifyBtn');
+    const capitalBtn = document.getElementById('capitalIdentifyBtn');
+    
+    if (!stateBtn || !capitalBtn) return;
+    
+    // Helper function to switch modes and reset progress
+    function switchMode(newMode) {
+        geoGameState.currentMode = newMode;
+        geoGameState.streak = 0;
+        geoGameState.correct = 0;
+        geoGameState.answered = false;
+        
+        // Reset and reshuffle state queue
+        resetStateQueue();
+        
+        // Update stats display
+        document.getElementById('geoStreak').textContent = 0;
+        document.getElementById('geoCorrect').textContent = 0;
+        
+        // Clear feedback
+        const feedbackEl = document.getElementById('geoFeedback');
+        feedbackEl.textContent = '';
+        feedbackEl.style.color = '';
+        
+        // Start fresh question
+        startGeographyQuestion();
+    }
+    
+    // Mode switching: State mode
+    stateBtn.addEventListener('click', () => {
+        stateBtn.style.background = '#0077b6';
+        stateBtn.style.color = 'white';
+        capitalBtn.style.background = '#90caf9';
+        capitalBtn.style.color = '#0077b6';
+        switchMode('state');
+    });
+    
+    // Mode switching: Capital mode
+    capitalBtn.addEventListener('click', () => {
+        capitalBtn.style.background = '#0077b6';
+        capitalBtn.style.color = 'white';
+        stateBtn.style.background = '#90caf9';
+        stateBtn.style.color = '#0077b6';
+        switchMode('capital');
+    });
+    
+    // Initialize SVG once on page load
+    if (!geoGameState.svgElement) {
+        loadGeographySVG();
+    } else {
+        // SVG already loaded, just start game
+        resetStateQueue();
+        startGeographyQuestion();
+    }
+}
+
+// Show results screen after all 50 states completed
+function showGeographyResults() {
+    const gameContainer = document.getElementById('geography-game');
+    const accuracy = Math.round((geoGameState.correctAnswers / 50) * 100);
+    const mode = geoGameState.currentMode === 'state' ? 'State Identification' : 'Capital Identification';
+    
+    let missedStatesHtml = '';
+    if (geoGameState.missedStates.length > 0) {
+        missedStatesHtml = `
+            <div class="geo-missed-section">
+                <h3>States to Review</h3>
+                <ul class="geo-missed-list">
+                    ${geoGameState.missedStates.map(state => `<li>${state.name}</li>`).join('')}
+                </ul>
+            </div>
+        `;
+    }
+    
+    const resultsHtml = `
+        <div class="geo-results-screen">
+            <h2 class="geo-results-title">Round Complete!</h2>
+            <p class="geo-results-mode">Mode: ${mode}</p>
+            
+            <div class="geo-score-summary">
+                <p class="geo-score-line">Correct: <span class="geo-score-correct">${geoGameState.correctAnswers}</span> / <span class="geo-score-total">50</span></p>
+                <p class="geo-score-line">Accuracy: <span class="geo-score-accuracy">${accuracy}%</span></p>
+                <p class="geo-score-line">Longest Streak: <span class="geo-score-streak">${geoGameState.longestStreak}</span></p>
+            </div>
+            
+            ${missedStatesHtml}
+            
+            <div class="geo-restart-buttons">
+                <button id="geoPlayAgain" class="geo-restart-btn geo-restart-primary">Play Again (Same Mode)</button>
+                <button id="geoSwitchMode" class="geo-restart-btn geo-restart-secondary">Switch Game Mode</button>
+            </div>
+        </div>
+    `;
+    
+    gameContainer.innerHTML = resultsHtml;
+    
+    // Attach event listeners
+    document.getElementById('geoPlayAgain').addEventListener('click', resetGeographyRound);
+    document.getElementById('geoSwitchMode').addEventListener('click', showGeographyModeSelection);
+}
+
+// Reset and restart current game mode
+function resetGeographyRound() {
+    geoGameState.totalAsked = 0;
+    geoGameState.correctAnswers = 0;
+    geoGameState.incorrectAnswers = 0;
+    geoGameState.missedStates = [];
+    geoGameState.streak = 0;
+    geoGameState.correct = 0;
+    geoGameState.answered = false;
+    geoGameState.currentStreak = 0;
+    geoGameState.longestStreak = 0;
+    
+    // Reshuffle state queue and restart
+    resetStateQueue();
+    
+    // Rebuild game UI
+    rebuildGeographyGameUI();
+    
+    // Start fresh
+    startGeographyQuestion();
+}
+
+// Show mode selection and reset to choose mode
+function showGeographyModeSelection() {
+    const gameContainer = document.getElementById('geography-game');
+    gameContainer.innerHTML = `
+        <h2 style="color:#0077b6;text-align:center;margin-top:0;">US Geography Challenge</h2>
+        
+        <div id="modeSelector" class="geo-mode-selector" style="margin-top: 3rem;">
+            <button id="stateIdentifyBtn" class="geo-mode-btn" data-mode="state" style="font-weight:bold;">Identify the State</button>
+            <button id="capitalIdentifyBtn" class="geo-mode-btn" data-mode="capital" style="font-weight:bold;">Identify the Capital</button>
+        </div>
+    `;
+    
+    // Re-initialize mode buttons
+    const stateBtn = document.getElementById('stateIdentifyBtn');
+    const capitalBtn = document.getElementById('capitalIdentifyBtn');
+    
+    function switchMode(newMode) {
+        geoGameState.currentMode = newMode;
+        geoGameState.totalAsked = 0;
+        geoGameState.correctAnswers = 0;
+        geoGameState.incorrectAnswers = 0;
+        geoGameState.missedStates = [];
+        geoGameState.streak = 0;
+        geoGameState.correct = 0;
+        geoGameState.answered = false;
+        geoGameState.currentStreak = 0;
+        geoGameState.longestStreak = 0;
+        
+        resetStateQueue();
+        rebuildGeographyGameUI();
+        startGeographyQuestion();
+    }
+    
+    stateBtn.addEventListener('click', () => {
+        stateBtn.style.background = '#0077b6';
+        stateBtn.style.color = 'white';
+        capitalBtn.style.background = '#90caf9';
+        capitalBtn.style.color = '#0077b6';
+        switchMode('state');
+    });
+    
+    capitalBtn.addEventListener('click', () => {
+        capitalBtn.style.background = '#0077b6';
+        capitalBtn.style.color = 'white';
+        stateBtn.style.background = '#90caf9';
+        stateBtn.style.color = '#0077b6';
+        switchMode('capital');
+    });
+}
+
+// Rebuild game UI from scratch (used after results screen)
+function rebuildGeographyGameUI() {
+    const gameContainer = document.getElementById('geography-game');
+    gameContainer.innerHTML = `
+        <h2 style="color:#0077b6;text-align:center;margin-top:0;">US Geography Challenge</h2>
+        
+        <div id="modeSelector" class="geo-mode-selector">
+            <button id="stateIdentifyBtn" class="geo-mode-btn" data-mode="state" style="font-weight:bold;">Identify the State</button>
+            <button id="capitalIdentifyBtn" class="geo-mode-btn" data-mode="capital" style="font-weight:bold;">Identify the Capital</button>
+        </div>
+
+        <div class="geo-main-layout">
+            <div class="geo-map-section">
+                <div id="geoMapContainer" class="geo-map-container"></div>
+            </div>
+            
+            <div class="geo-controls-section">
+                <div id="geoQuestion" class="geo-question"></div>
+                <div id="geoAnswers" class="geo-answers"></div>
+                <div id="geoFeedback" class="geo-feedback"></div>
+                <div class="geo-stats">
+                    <span>Streak: <span id="geoStreak">0</span></span>
+                    <span>Correct: <span id="geoCorrect">0</span></span>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Start when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    // Other initialization code here...
+    initGeographyGame();
+});
