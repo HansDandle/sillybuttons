@@ -78,29 +78,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateBirthdayCountdown();
     setInterval(updateBirthdayCountdown, 1000); // Update every second
     
-    // Wait for Supabase client to be initialized (CDN loading)
-    let attempts = 0;
-    while (!supabaseClient && attempts < 20) {
-        console.log('Waiting for Supabase client to initialize...');
-        await new Promise(resolve => setTimeout(resolve, 100));
-        attempts++;
-    }
-    
-    // Load custom links from Supabase when page loads
-    if (supabaseClient) {
-        try {
-            const supabaseLinks = await loadCustomLinksFromSupabase();
-            if (supabaseLinks && supabaseLinks.length > 0) {
-                console.log('Loaded from Supabase:', supabaseLinks);
-                localStorage.setItem('customItems', JSON.stringify(supabaseLinks));
-            } else {
-                console.log('No items returned from Supabase');
-            }
-        } catch (e) {
-            console.log('Supabase load on startup failed:', e);
+    // Load custom links from Supabase REST API
+    try {
+        const supabaseLinks = await loadCustomLinksFromSupabase();
+        if (supabaseLinks && supabaseLinks.length > 0) {
+            console.log('Loaded from Supabase:', supabaseLinks);
+            localStorage.setItem('customItems', JSON.stringify(supabaseLinks));
+        } else {
+            console.log('No items returned from Supabase');
         }
-    } else {
-        console.warn('Supabase client still not initialized after waiting');
+    } catch (e) {
+        console.log('Supabase load on startup failed:', e);
     }
     
     // Always render, whether from Supabase or localStorage
@@ -110,23 +98,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 // --- Custom Items (localStorage + Supabase) logic ---
 async function loadCustomLinksFromSupabase() {
     try {
-        if (!supabaseClient) {
-            console.warn('Supabase client not initialized');
-            return [];
-        }
-        const { data, error } = await supabaseClient
-            .from('custom_links')
-            .select('*')
-            .order('created_at', { ascending: false });
+        const response = await fetch(
+            'https://ozpwwxbfmgxbitbzhsae.supabase.co/rest/v1/custom_links?select=*&order=created_at.desc',
+            {
+                headers: {
+                    'apikey': 'sb_publishable_UFlEyPnpOTYr9zEqiQiqjA_UEBHHmLL',
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
         
-        if (error) {
-            console.error('Error loading from Supabase:', error);
+        if (!response.ok) {
+            console.error('Error loading from Supabase:', response.status);
             return [];
         }
-        console.log('Successfully loaded from Supabase:', data);
+        
+        const data = await response.json();
+        console.log('Successfully loaded from Supabase REST API:', data);
         return data || [];
     } catch (e) {
-        console.error('Supabase fetch failed:', e);
+        console.error('Supabase REST API fetch failed:', e);
         return [];
     }
 }
