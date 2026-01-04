@@ -78,6 +78,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateBirthdayCountdown();
     setInterval(updateBirthdayCountdown, 1000); // Update every second
     
+    // Wait for Supabase client to be initialized (CDN loading)
+    let attempts = 0;
+    while (!supabaseClient && attempts < 20) {
+        console.log('Waiting for Supabase client to initialize...');
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+    }
+    
     // Load custom links from Supabase when page loads
     if (supabaseClient) {
         try {
@@ -85,10 +93,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (supabaseLinks && supabaseLinks.length > 0) {
                 console.log('Loaded from Supabase:', supabaseLinks);
                 localStorage.setItem('customItems', JSON.stringify(supabaseLinks));
+            } else {
+                console.log('No items returned from Supabase');
             }
         } catch (e) {
-            console.log('Supabase load on startup failed, using localStorage');
+            console.log('Supabase load on startup failed:', e);
         }
+    } else {
+        console.warn('Supabase client still not initialized after waiting');
     }
     
     // Always render, whether from Supabase or localStorage
