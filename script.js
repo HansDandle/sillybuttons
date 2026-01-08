@@ -377,6 +377,8 @@ function playGameSound(type) {
     } else if (type === 'wrong') {
         sound.src = guessWrongSounds[Math.floor(Math.random() * guessWrongSounds.length)];
     }
+    // Clear any previous onended handlers to prevent silly button redirects
+    sound.onended = null;
     sound.currentTime = 0;
     sound.play();
 }
@@ -1001,6 +1003,18 @@ function loadGeographySVG() {
                     
                     // Apply state class for CSS styling
                     path.classList.add('state');
+                    
+                    // Add click handler for state identification mode
+                    path.addEventListener('click', (e) => {
+                        e.stopPropagation(); // Prevent event bubbling
+                        
+                        // Only process clicks in "state" identification mode
+                        if (geoGameState.currentMode === 'state') {
+                            // Check if this is the highlighted state
+                            const clickedAnswer = stateData[stateCode].name;
+                            checkGeographyAnswer(clickedAnswer);
+                        }
+                    });
                 }
             });
             
