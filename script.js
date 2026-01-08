@@ -1208,7 +1208,7 @@ function checkGeographyAnswer(answer) {
     document.getElementById('geoCorrect').textContent = geoGameState.correct;
     
     // Check if round is complete (all 50 states asked)
-    if (geoGameState.remainingStates.length === 0 && geoGameState.totalAsked === 50) {
+    if (geoGameState.totalAsked >= 50) {
         // Show results screen after 2 seconds
         setTimeout(() => {
             showGeographyResults();
