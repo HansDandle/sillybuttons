@@ -213,7 +213,528 @@
         <div id="countdownDisplay">Days until Fritz's Birthday: <span id="countdownText">Loading...</span></div>
         <div id="birthdayMessage" style="display:none;">🎉 Happy Birthday Fritz!!!! 🎉</div>
     </div>
+    <!-- Mine the Path Game - Arena -->
+    <div id="mine-the-path">
+        <h2>⛏️ Mine the Path</h2>
+        <div id="mtp-status"></div>
+        <canvas id="mtp-canvas" width="500" height="500" style="border: 3px solid #333; background: #1a1a2e; display: block; margin: 10px auto; image-rendering: pixelated;"></canvas>
+        <div style="text-align: center; font-size: 14px; margin: 10px 0;">
+            <strong>Controls:</strong> Arrow Keys to Move | Collect as much Gold as you can in 60 seconds!
+        </div>
+        <button id="mtp-restart" style="display: block; margin: 10px auto; padding: 8px 16px; font-size: 16px; cursor: pointer;">Restart Game</button>
+    </div>
+    <style>
+        #mine-the-path {
+            max-width: 650px;
+            margin: 40px auto;
+            text-align: center;
+            font-family: system-ui, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        #mtp-canvas {
+            border: 3px solid #333 !important;
+            background: #1a1a2e !important;
+            display: block !important;
+            margin: 10px auto !important;
+            image-rendering: pixelated !important;
+        }
+    </style>
     <script src="script.js?v=2"></script>
+    <script>
+        (() => {
+            const canvas = document.getElementById("mtp-canvas");
+            const ctx = canvas.getContext("2d");
+            const statusEl = document.getElementById("mtp-status");
+            const restartBtn = document.getElementById("mtp-restart");
+
+            // Grid setup
+            const GRID_SIZE = 20;
+            const TILE_SIZE = canvas.width / GRID_SIZE;
+            const GAME_TIME = 60;
+
+            // Preload images
+            const images = {};
+            const imageNames = ["stone", "lava", "gold", "steve", "creeper"];
+            let imagesLoaded = 0;
+
+            imageNames.forEach(name => {
+                const img = new Image();
+                img.src = `./images/${name}.png`;
+                img.onload = () => {
+                    images[name] = img;
+                    imagesLoaded++;
+                };
+                img.onerror = () => {
+                    console.warn(`Failed to load ${name}.png`);
+                    imagesLoaded++;
+                };
+            });
+
+            // Game state
+            let gameState = {
+                player: { gridX: 1, gridY: 1, gold: 0 },
+                creepers: [],
+                goldItems: [],
+                time: GAME_TIME,
+                gameOver: false,
+                won: false,
+                wonTime: 0,
+                confetti: [],
+                keys: { ArrowLeft: false, ArrowRight: false, ArrowUp: false, ArrowDown: false },
+                keyFrames: { ArrowLeft: 0, ArrowRight: 0, ArrowUp: 0, ArrowDown: 0 }
+            };
+
+            function initGame() {
+                gameState.player = { gridX: 1, gridY: 18, gold: 0 };
+                gameState.time = GAME_TIME;
+                gameState.gameOver = false;
+                gameState.won = false;
+                gameState.wonTime = 0;
+                gameState.confetti = [];
+
+                // Spawn 2-3 creepers
+                gameState.creepers = [];
+                const creeperCount = 2 + Math.floor(Math.random() * 2);
+                for (let i = 0; i < creeperCount; i++) {
+                    let x, y;
+                    do {
+                        x = Math.floor(Math.random() * GRID_SIZE);
+                        y = Math.floor(Math.random() * GRID_SIZE);
+                    } while ((x < 3 && y < 3) || (x === gameState.player.gridX && y === gameState.player.gridY));
+
+                    gameState.creepers.push({
+                        gridX: x,
+                        gridY: y,
+                        moveCounter: 0,
+                        moveDelay: 16 + Math.floor(Math.random() * 16)
+                    });
+                }
+
+                // Spawn exactly 50 stone blocks, 25 gold items, and 15 lava blocks mixed as obstacles
+                gameState.obstacles = [];
+                let stonesPlaced = 0;
+                let goldPlaced = 0;
+                let lavaPlaced = 0;
+                const totalStones = 50;
+                const totalGold = 25;
+                const totalLava = 15;
+
+                while (stonesPlaced < totalStones || goldPlaced < totalGold || lavaPlaced < totalLava) {
+                    let x, y;
+                    let isValid = false;
+                    let attempts = 0;
+                    
+                    do {
+                        x = Math.floor(Math.random() * GRID_SIZE);
+                        y = Math.floor(Math.random() * GRID_SIZE);
+                        attempts++;
+                        
+                        isValid = (x >= 3 || y >= 3) && 
+                                 !(x === gameState.player.gridX && y === gameState.player.gridY) &&
+                                 !gameState.obstacles.some(o => o.gridX === x && o.gridY === y) &&
+                                 !gameState.creepers.some(c => c.gridX === x && c.gridY === y);
+                    } while (!isValid && attempts < 50);
+
+                    if (isValid) {
+                        // Decide what to place: prioritize in order
+                        if (stonesPlaced < totalStones) {
+                            gameState.obstacles.push({
+                                gridX: x,
+                                gridY: y,
+                                type: 'stone'
+                            });
+                            stonesPlaced++;
+                        } else if (lavaPlaced < totalLava) {
+                            gameState.obstacles.push({
+                                gridX: x,
+                                gridY: y,
+                                type: 'lava'
+                            });
+                            lavaPlaced++;
+                        } else if (goldPlaced < totalGold) {
+                            gameState.obstacles.push({
+                                gridX: x,
+                                gridY: y,
+                                type: 'gold',
+                                collected: false
+                            });
+                            goldPlaced++;
+                        }
+                    }
+                }
+            }
+
+            function handleKeyDown(e) {
+                if (e.key === "ArrowLeft") {
+                    e.preventDefault();
+                    if (!gameState.keys.ArrowLeft) {
+                        gameState.keys.ArrowLeft = true;
+                        gameState.keyFrames.ArrowLeft = 0;
+                    }
+                }
+                if (e.key === "ArrowRight") {
+                    e.preventDefault();
+                    if (!gameState.keys.ArrowRight) {
+                        gameState.keys.ArrowRight = true;
+                        gameState.keyFrames.ArrowRight = 0;
+                    }
+                }
+                if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    if (!gameState.keys.ArrowUp) {
+                        gameState.keys.ArrowUp = true;
+                        gameState.keyFrames.ArrowUp = 0;
+                    }
+                }
+                if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    if (!gameState.keys.ArrowDown) {
+                        gameState.keys.ArrowDown = true;
+                        gameState.keyFrames.ArrowDown = 0;
+                    }
+                }
+            }
+
+            function handleKeyUp(e) {
+                if (e.key === "ArrowLeft") gameState.keys.ArrowLeft = false;
+                if (e.key === "ArrowRight") gameState.keys.ArrowRight = false;
+                if (e.key === "ArrowUp") gameState.keys.ArrowUp = false;
+                if (e.key === "ArrowDown") gameState.keys.ArrowDown = false;
+            }
+
+            function moveCreeper(creeper) {
+                creeper.moveCounter++;
+                if (creeper.moveCounter < creeper.moveDelay) return;
+
+                creeper.moveCounter = 0;
+                creeper.moveDelay = 16 + Math.floor(Math.random() * 16);
+
+                // Chase player with randomness - 70% chase, 30% random
+                let moveX = 0, moveY = 0;
+
+                if (Math.random() < 0.7) {
+                    // Chase behavior
+                    if (creeper.gridX < gameState.player.gridX) moveX = 1;
+                    else if (creeper.gridX > gameState.player.gridX) moveX = -1;
+
+                    if (creeper.gridY < gameState.player.gridY) moveY = 1;
+                    else if (creeper.gridY > gameState.player.gridY) moveY = -1;
+
+                    // Choose horizontal or vertical
+                    if (Math.random() < 0.5) {
+                        moveY = 0;
+                    } else {
+                        moveX = 0;
+                    }
+                } else {
+                    // Random movement
+                    const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+                    const [dx, dy] = dirs[Math.floor(Math.random() * dirs.length)];
+                    moveX = dx;
+                    moveY = dy;
+                }
+
+                const newX = creeper.gridX + moveX;
+                const newY = creeper.gridY + moveY;
+
+                if (newX >= 0 && newX < GRID_SIZE && newY >= 0 && newY < GRID_SIZE) {
+                    creeper.gridX = newX;
+                    creeper.gridY = newY;
+                }
+            }
+
+            function update() {
+                if (gameState.gameOver) {
+                    if (gameState.won) {
+                        gameState.wonTime++;
+                        // Update confetti
+                        for (let i = gameState.confetti.length - 1; i >= 0; i--) {
+                            let p = gameState.confetti[i];
+                            p.x += p.vx;
+                            p.y += p.vy;
+                            p.vy += 0.1; // gravity
+                            if (p.y > canvas.height) {
+                                gameState.confetti.splice(i, 1);
+                            }
+                        }
+                    }
+                    return;
+                }
+
+                // Decrease time
+                gameState.time -= 1 / 60;
+                if (gameState.time <= 0) {
+                    gameState.time = 0;
+                    gameState.gameOver = true;
+                    statusEl.textContent = "🎉 Congratulations! Survived 60 seconds! Gold collected: " + Math.floor(gameState.player.gold);
+                    return;
+                }
+
+                // Player movement with acceleration
+                let newX = gameState.player.gridX;
+                let newY = gameState.player.gridY;
+
+                // Check each direction with acceleration timing
+                if (gameState.keys.ArrowLeft) {
+                    gameState.keyFrames.ArrowLeft++;
+                    if (gameState.keyFrames.ArrowLeft === 1 || (gameState.keyFrames.ArrowLeft > 10 && (gameState.keyFrames.ArrowLeft - 10) % 3 === 0)) {
+                        newX--;
+                    }
+                }
+                if (gameState.keys.ArrowRight) {
+                    gameState.keyFrames.ArrowRight++;
+                    if (gameState.keyFrames.ArrowRight === 1 || (gameState.keyFrames.ArrowRight > 10 && (gameState.keyFrames.ArrowRight - 10) % 3 === 0)) {
+                        newX++;
+                    }
+                }
+                if (gameState.keys.ArrowUp) {
+                    gameState.keyFrames.ArrowUp++;
+                    if (gameState.keyFrames.ArrowUp === 1 || (gameState.keyFrames.ArrowUp > 10 && (gameState.keyFrames.ArrowUp - 10) % 3 === 0)) {
+                        newY--;
+                    }
+                }
+                if (gameState.keys.ArrowDown) {
+                    gameState.keyFrames.ArrowDown++;
+                    if (gameState.keyFrames.ArrowDown === 1 || (gameState.keyFrames.ArrowDown > 10 && (gameState.keyFrames.ArrowDown - 10) % 3 === 0)) {
+                        newY++;
+                    }
+                }
+
+                if (newX >= 0 && newX < GRID_SIZE && newY >= 0 && newY < GRID_SIZE) {
+                    gameState.player.gridX = newX;
+                    gameState.player.gridY = newY;
+                }
+
+                // Check gold collection
+                for (let g of gameState.goldItems) {
+                    if (!g.collected && g.gridX === gameState.player.gridX && g.gridY === gameState.player.gridY) {
+                        g.collected = true;
+                        gameState.player.gold++;
+                    }
+                }
+
+                // Check obstacle collision (lava ends game, stone can be broken, gold is in obstacles now)
+                for (let obs of gameState.obstacles) {
+                    if (obs.gridX === gameState.player.gridX && obs.gridY === gameState.player.gridY) {
+                        if (obs.type === 'lava') {
+                            gameState.gameOver = true;
+                            statusEl.textContent = "You touched the lava! Gold collected: " + Math.floor(gameState.player.gold);
+                            return;
+                        } else if (obs.type === 'stone') {
+                            gameState.obstacles.splice(gameState.obstacles.indexOf(obs), 1);
+                        } else if (obs.type === 'gold' && !obs.collected) {
+                            obs.collected = true;
+                            gameState.player.gold++;
+                            if (gameState.player.gold >= 25) {
+                                gameState.gameOver = true;
+                                gameState.won = true;
+                                gameState.wonTime = 0;
+                                // Create confetti
+                                for (let i = 0; i < 50; i++) {
+                                    gameState.confetti.push({
+                                        x: Math.random() * canvas.width,
+                                        y: -10,
+                                        vx: (Math.random() - 0.5) * 8,
+                                        vy: Math.random() * 4 + 2,
+                                        size: Math.random() * 8 + 4,
+                                        color: ['#ffd700', '#ff6b35', '#00ff00'][Math.floor(Math.random() * 3)]
+                                    });
+                                }
+                                statusEl.textContent = "🎉 YOU WIN! You collected all 25 gold!";
+                                return;
+                            }
+                        }
+                    }
+                }
+
+                // Move and check creepers
+                for (let creeper of gameState.creepers) {
+                    moveCreeper(creeper);
+
+                    if (creeper.gridX === gameState.player.gridX && creeper.gridY === gameState.player.gridY) {
+                        gameState.gameOver = true;
+                        statusEl.textContent = "The creeper got you! Gold collected: " + Math.floor(gameState.player.gold);
+                        return;
+                    }
+                }
+            }
+
+            function draw() {
+                // Clear canvas
+                ctx.fillStyle = "#1a1a2e";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Draw grid
+                ctx.strokeStyle = "#333";
+                ctx.lineWidth = 1;
+                for (let i = 0; i <= GRID_SIZE; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(i * TILE_SIZE, 0);
+                    ctx.lineTo(i * TILE_SIZE, canvas.height);
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.moveTo(0, i * TILE_SIZE);
+                    ctx.lineTo(canvas.width, i * TILE_SIZE);
+                    ctx.stroke();
+                }
+
+                // Draw gold
+                for (let g of gameState.goldItems) {
+                    if (!g.collected) {
+                        const x = g.gridX * TILE_SIZE;
+                        const y = g.gridY * TILE_SIZE;
+                        if (images.gold) {
+                            ctx.drawImage(images.gold, x + 5, y + 5, TILE_SIZE - 10, TILE_SIZE - 10);
+                        } else {
+                            ctx.fillStyle = "#ffd700";
+                            ctx.fillRect(x + 5, y + 5, TILE_SIZE - 10, TILE_SIZE - 10);
+                        }
+                    }
+                }
+
+                // Draw obstacles (lava, stone, and gold)
+                for (let obs of gameState.obstacles) {
+                    const x = obs.gridX * TILE_SIZE;
+                    const y = obs.gridY * TILE_SIZE;
+                    if (obs.type === 'lava') {
+                        if (images.lava) {
+                            ctx.drawImage(images.lava, x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+                        } else {
+                            ctx.fillStyle = "#ff6b35";
+                            ctx.fillRect(x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+                        }
+                    } else if (obs.type === 'stone') {
+                        if (images.stone) {
+                            ctx.drawImage(images.stone, x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+                        } else {
+                            ctx.fillStyle = "#888";
+                            ctx.fillRect(x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+                        }
+                    } else if (obs.type === 'gold' && !obs.collected) {
+                        if (images.gold) {
+                            ctx.drawImage(images.gold, x + 5, y + 5, TILE_SIZE - 10, TILE_SIZE - 10);
+                        } else {
+                            ctx.fillStyle = "#ffd700";
+                            ctx.fillRect(x + 5, y + 5, TILE_SIZE - 10, TILE_SIZE - 10);
+                        }
+                    }
+                }
+
+                // Draw creepers
+                for (let creeper of gameState.creepers) {
+                    const x = creeper.gridX * TILE_SIZE;
+                    const y = creeper.gridY * TILE_SIZE;
+                    if (images.creeper) {
+                        ctx.drawImage(images.creeper, x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+                    } else {
+                        ctx.fillStyle = "#00aa00";
+                        ctx.fillRect(x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+                    }
+                }
+
+                // Draw player
+                const playerX = gameState.player.gridX * TILE_SIZE;
+                const playerY = gameState.player.gridY * TILE_SIZE;
+                if (images.steve) {
+                    ctx.drawImage(images.steve, playerX + 2, playerY + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+                } else {
+                    ctx.fillStyle = "#00ff00";
+                    ctx.fillRect(playerX + 2, playerY + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+                }
+
+                // Draw START arrow pointing to player
+                ctx.fillStyle = "#ff0000";
+                ctx.font = "bold 14px Arial";
+                ctx.textAlign = "center";
+                ctx.fillText("START", playerX + TILE_SIZE / 2, -5);
+                
+                // Draw arrow pointing down to player
+                const arrowX = playerX + TILE_SIZE / 2;
+                const arrowY = -20;
+                ctx.strokeStyle = "#ff0000";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(arrowX, arrowY);
+                ctx.lineTo(arrowX, -8);
+                ctx.stroke();
+                
+                // Arrow head
+                ctx.beginPath();
+                ctx.moveTo(arrowX, -8);
+                ctx.lineTo(arrowX - 5, 0);
+                ctx.lineTo(arrowX + 5, 0);
+                ctx.closePath();
+                ctx.fillStyle = "#ff0000";
+                ctx.fill();
+
+                // Draw HUD
+                ctx.fillStyle = "#fff";
+                ctx.font = "18px Arial";
+                ctx.textAlign = "left";
+                ctx.fillText("Gold: " + gameState.player.gold, 10, 25);
+                ctx.fillText("Time: " + Math.max(0, Math.ceil(gameState.time)) + "s", 10, 50);
+
+                // Draw game over overlay (for losing)
+                if (gameState.gameOver && !gameState.won) {
+                    ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = "#fff";
+                    ctx.font = "bold 32px Arial";
+                    ctx.textAlign = "center";
+                    ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2 - 20);
+                    ctx.font = "18px Arial";
+                    ctx.fillText("Gold: " + Math.floor(gameState.player.gold), canvas.width / 2, canvas.height / 2 + 30);
+                    return;
+                }
+
+                // Draw confetti and winning screen
+                if (gameState.won) {
+                    // Flashing background
+                    const flash = Math.floor(gameState.wonTime / 10) % 2 === 0;
+                    ctx.fillStyle = flash ? "rgba(255, 255, 0, 0.3)" : "rgba(255, 100, 100, 0.3)";
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    // Large congratulations text
+                    ctx.fillStyle = "#FFD700";
+                    ctx.font = "bold 48px Arial";
+                    ctx.textAlign = "center";
+                    ctx.strokeStyle = "#000";
+                    ctx.lineWidth = 3;
+                    ctx.strokeText("🎉 YOU WIN! 🎉", canvas.width / 2, canvas.height / 2 - 40);
+                    ctx.fillText("🎉 YOU WIN! 🎉", canvas.width / 2, canvas.height / 2 - 40);
+
+                    ctx.fillStyle = "#fff";
+                    ctx.font = "bold 32px Arial";
+                    ctx.strokeText("All 25 Gold Collected!", canvas.width / 2, canvas.height / 2 + 30);
+                    ctx.fillText("All 25 Gold Collected!", canvas.width / 2, canvas.height / 2 + 30);
+                    return;
+                }
+            }
+
+            function gameLoop() {
+                update();
+                draw();
+                requestAnimationFrame(gameLoop);
+            }
+
+            // Event listeners
+            document.addEventListener("keydown", handleKeyDown);
+            document.addEventListener("keyup", handleKeyUp);
+            restartBtn.addEventListener("click", () => {
+                initGame();
+                statusEl.textContent = "Avoid creepers! Collect gold!";
+            });
+
+            // Start
+            initGame();
+            statusEl.textContent = "Avoid creepers! Collect gold!";
+            gameLoop();
+        })();
+    </script>
                 <h3 class="nautical-subtitle">Page designed by Fritz M.</h3>
 
 </body>
