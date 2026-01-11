@@ -309,7 +309,6 @@ function glitterExplosion() {
 const kidSites = [
     "https://pbskids.org/",
     "https://www.coolmathgames.com/",
-    "https://www.nationalgeographickids.com/",
     "https://www.funbrain.com/",
     "https://musiclab.chromeexperiments.com/Song-Maker/",
     "https://www.starfall.com/",
@@ -321,12 +320,8 @@ const kidSites = [
     "https://www.fallingfalling.com/",
     "https://www.eyebleach.me/",
     "https://www.drawastickman.com/",
-    "https://www.thatsthefinger.com/",
     "https://www.youtube.com/@HydraulicPressChannel",
-    "https://www.pointerpointer.com/",
-    "https://www.fallingfalling.com/",
     "https://www.eyebleach.me/",
-    "https://www.drawastickman.com/"
 ];
 
 

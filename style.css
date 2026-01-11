@@ -107,7 +107,7 @@
         border-radius: 1.2rem;
     }
 
-    .sound-label { font-size: 1rem; margin-bottom: 0.3rem; }
+    .sound-label { font-size: 0.8rem; margin-bottom: 0.1rem; }
     .button-link { font-size: 0.95rem; padding: 0.4rem 0.8rem; }
 
     /* treasure and controls spacing on mobile */
@@ -118,8 +118,8 @@
     /* hide large decorative anchors on the sides to save space */
     .nautical-bg { background-position: center top; }
 
-    /* whackamole popup full width on mobile */
-    .whackamole-container { left: 50%; transform: translate(-50%, -50%); width: calc(100% - 32px); max-width: 420px; }
+    /* whackamole container mobile */
+    .whackamole-container { width: 100%; max-width: none; padding: 1.5rem; }
 }
 
 /* Extra small screens tweak */
@@ -160,19 +160,18 @@
 }
 
 .whackamole-container {
-    position: fixed;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
+    position: static;
     background: #e3f2fd;
     border: 4px solid #1e88e5;
     border-radius: 2rem;
     box-shadow: 0 8px 32px rgba(30,136,229,0.18);
     padding: 2.5rem 3rem 2rem 3rem;
-    z-index: 3000;
+    z-index: auto;
     min-width: 350px;
     text-align: center;
     cursor: url('images/hammer.png'), pointer;
+    max-width: 500px;
+    margin: 2rem auto;
 }
 .whackamole-container h2 {
     margin-top: 0;
@@ -373,31 +372,15 @@
 }
 .abstract-layout {
     position: relative;
-    min-height: 600px;
-  max-width: 100%;
-      align-items: flex-start;
-    gap: 0;
+    min-height: auto;
+    max-width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    padding: 1rem;
+    justify-items: center;
 }
 
-.button-link-pair {
-    margin-bottom: 2.5rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-width: 300px;
-}
-
-.button-link {
-    margin-top: 0.7rem;
-    font-size: 1.1rem;
-    color: #1e88e5;
-    background: rgba(255,255,255,0.7);
-    border-radius: 1rem;
-    padding: 0.3rem 1rem;
-    box-shadow: 0 2px 8px rgba(30,136,229,0.08);
-    word-break: break-all;
-}
-/* Glitter explosion effect */
 .glitter-explosion {
     position: fixed;
     width: 80px;
@@ -449,10 +432,11 @@ body {
 .nautical-title {
     color: #1e88e5;
     text-shadow: 2px 2px 0 #fff, 4px 4px 0 #1e88e5;
-    margin-bottom: 2rem;
-    font-size: 3rem;
-    letter-spacing: 2px;
+    margin-bottom: 0.8rem;
+    font-size: 2.4rem;
+    letter-spacing: 1px;
     text-align: center;
+    grid-column: 1 / -1;
 }
 
 .container {
@@ -467,13 +451,14 @@ body {
 }
 
 
+/* ===== SILLY BUTTONS LAYOUT - Desktop ===== */
 .sillyButton {
-    font-size: 2.2rem;
-    padding: 1.5rem 3rem;
+    font-size: 1.2rem;
+    padding: 0.5rem 1.2rem;
     background: #ffb347;
-    border: 4px solid #1e88e5;
-    border-radius: 2rem;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    border: 3px solid #1e88e5;
+    border-radius: 1.2rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
     cursor: pointer;
     transition: background 0.2s, transform 0.1s, border 0.2s;
     animation: bounce 2s infinite;
@@ -482,12 +467,61 @@ body {
     outline: none;
 }
 
-
 .sillyButton:hover {
     background: #ffcc80;
-    border: 4px solid #f9f871;
-    transform: scale(1.1) rotate(-3deg);
+    border: 3px solid #f9f871;
+    transform: scale(1.05) rotate(-2deg);
     animation: shake 0.4s;
+}
+
+.button-link-pair {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+.sound-label {
+    font-size: 0.8rem;
+    color: #666;
+    font-weight: 600;
+}
+
+.button-link {
+    margin-top: 0.2rem;
+    font-size: 0.9rem;
+    color: #1e88e5;
+    background: rgba(255,255,255,0.7);
+    border-radius: 0.8rem;
+    padding: 0.2rem 0.8rem;
+    box-shadow: 0 2px 8px rgba(30,136,229,0.08);
+    word-break: break-all;
+}
+
+/* ===== SILLY BUTTONS LAYOUT - Mobile ===== */
+@media (max-width: 800px) {
+    .abstract-layout { min-height: auto; min-width: auto; gap: 1.2rem; padding: 1rem; }
+    .button-link-pair {
+        position: static !important;
+        left: auto !important;
+        top: auto !important;
+        transform: none !important;
+        margin: 0.6rem auto !important;
+        width: calc(100% - 2rem) !important;
+        max-width: 420px;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .sillyButton {
+        font-size: 1.6rem;
+        padding: 1rem 1.6rem;
+        border-radius: 1.2rem;
+    }
+
+    .sound-label { font-size: 0.8rem; margin-bottom: 0.1rem; }
+    .button-link { font-size: 0.95rem; padding: 0.4rem 0.8rem; }
 }
 /* Strobe effect for nautical fun */
 .strobe {
