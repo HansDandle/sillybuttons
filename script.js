@@ -589,8 +589,17 @@ function getFriendlyName(url) {
     }
 }
 
-// Assign a random site to each button and display a friendly name
-const assignedSites = Array.from({length: buttons.length}, () => kidSites[Math.floor(Math.random() * kidSites.length)]);
+// Assign a random site to each button without duplicates
+function assignUniqueSites(numButtons) {
+    const shuffled = [...kidSites].sort(() => Math.random() - 0.5);
+    const assigned = [];
+    for (let i = 0; i < numButtons; i++) {
+        assigned.push(shuffled[i % shuffled.length]);
+    }
+    return assigned;
+}
+
+const assignedSites = assignUniqueSites(buttons.length);
 siteLabels.forEach((label, i) => {
     label.textContent = getFriendlyName(assignedSites[i]);
 });
