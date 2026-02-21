@@ -275,6 +275,524 @@ if (wmClose && whackamoleGame) {
 if (wmStart) {
     wmStart.addEventListener('click', startWhackamole);
 }
+
+// Archery game logic
+function initArcheryGame() {
+    const canvas = document.getElementById('archery-canvas');
+    const levelSpan = document.getElementById('archery-level');
+    const feedbackEl = document.getElementById('archery-feedback');
+    if (!canvas || !levelSpan || !feedbackEl) return;
+
+    const ctx = canvas.getContext('2d');
+    const startX = canvas.width / 2;
+    const startY = canvas.height - 120;   // bow at bottom with more padding
+    const topY = 40;
+    const bullRadius = 20;
+    
+    // Load images
+    const castleImg = new Image();
+    castleImg.src = 'images/Castle.jpg';
+    const knightImg = new Image();
+    knightImg.src = 'images/knight.png';
+    const dragonImg = new Image();
+    dragonImg.src = 'images/dragon.gif';
+    
+    const targets = [
+        { x: canvas.width * 0.2, y: topY, hit: false },
+        { x: canvas.width * 0.5, y: topY, hit: false },
+        { x: canvas.width * 0.8, y: topY, hit: false }
+    ];
+    
+    // Dragon specific state
+    let dragon = {
+        x: canvas.width * 0.5,
+        y: topY,
+        hitsRemaining: 3,
+        moveTimer: 0,
+        width: 100,
+        height: 80
+    };
+    
+    let dragonVelX = 0;
+    let dragonVelY = 0;
+    let dragging = false;
+    let pullX = startX;
+    let pullY = startY;
+    let animating = false;
+    let level = 1;
+    let tries = 5;
+    let targetsHit = 0;
+    let gameActive = false;
+    let totalArrowsShot = 0;
+    let totalHits = 0;
+
+    function getTheme() {
+        if (level <= 5) return { name: 'Training', story: 'Archery Training' };
+        if (level <= 10) return { name: 'Castle', story: 'Defend the Castle from Knights!' };
+        return { name: 'Dragon', story: 'Face the Dragon!' };
+    }
+
+    function drawScene() {
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        const theme = getTheme();
+        
+        // draw theme-based background and targets
+        if (theme.name === 'Castle' && castleImg.complete) {
+            // Draw large castle background filling top 3/5ths of canvas
+            const castleHeight = Math.floor(canvas.height * 0.6);
+            ctx.drawImage(castleImg, 0, 10, canvas.width, castleHeight);
+            
+            // Draw knight targets on top of castle
+            targets.forEach(t => {
+                if (knightImg.complete) {
+                    ctx.globalAlpha = t.hit ? 0.3 : 1.0;
+                    ctx.drawImage(knightImg, t.x - 20, t.y - 30, 40, 60);
+                    ctx.globalAlpha = 1.0;
+                }
+            });
+        } else if (theme.name === 'Dragon' && dragonImg.complete) {
+            // Draw moving dragon (movement is handled in mainLoop)
+            ctx.drawImage(dragonImg, dragon.x - dragon.width/2, dragon.y - dragon.height/2, dragon.width, dragon.height);
+            ctx.font = 'bold 14px Arial';
+            ctx.fillStyle = '#d32f2f';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Hits: ${3 - dragon.hitsRemaining}`, dragon.x, dragon.y + dragon.height/2 + 20);
+            ctx.textAlign = 'left';
+        } else if (theme.name === 'Victory') {
+            ctx.fillStyle = '#ffd700';
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('⭐', canvas.width / 2, topY - 20);
+            ctx.textAlign = 'left';
+        } else {
+            // Training levels - simple circles
+            targets.forEach(t => {
+                ctx.fillStyle = t.hit ? '#999' : 'red';
+                ctx.beginPath();
+                ctx.arc(t.x, t.y, bullRadius, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = t.hit ? '#ccc' : 'white';
+                ctx.beginPath();
+                ctx.arc(t.x, t.y, bullRadius/2, 0, Math.PI*2);
+                ctx.fill();
+            });
+        }
+        
+        // draw start instruction if game not active
+        if (!gameActive && ((theme.name !== 'Dragon' && tries === 5 && targetsHit === 0) || (theme.name === 'Dragon' && tries === 5 && dragon.hitsRemaining === 3))) {
+            ctx.fillStyle = '#666';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(theme.story, canvas.width / 2, canvas.height / 2 - 20);
+            ctx.fillText('Click and drag the bow to start', canvas.width / 2, canvas.height / 2 + 10);
+            ctx.textAlign = 'left';
+        }
+        
+        // draw bow at bottom horizontally with downward flex at ends
+        const bend = Math.min(60, pullY - startY);
+        ctx.strokeStyle = '#654321';
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.moveTo(startX - 80, startY + bend);
+        ctx.quadraticCurveTo(startX, startY, startX + 80, startY + bend);
+        ctx.stroke();
+
+        // draw pull string & crosshair
+        if (dragging) {
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(pullX, pullY);
+            ctx.stroke();
+
+            const dy = pullY - startY;
+            if (dy > 1) {
+                const slope = (startX - pullX) / dy;
+                // Crosshair starts at mid-target height, moves UP based on pull distance
+                const maxPull = 150;
+                const pullFraction = Math.min(1, dy / maxPull);
+                const baseY = 140;  // Starting position lower on screen
+                const impactY = baseY - (pullFraction * 180);  // Moves UP up to 180 pixels
+                let xPred = startX + slope * (startY - impactY);
+                xPred = Math.max(0, Math.min(canvas.width, xPred));
+                ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+                ctx.beginPath();
+                ctx.moveTo(xPred - 10, impactY + 10);
+                ctx.lineTo(xPred + 10, impactY + 10);
+                ctx.moveTo(xPred, impactY + 20);
+                ctx.lineTo(xPred, impactY);
+                ctx.stroke();
+            }
+        }
+    }
+
+    function arrowColor() {
+        if (level <= 5) return '#000';
+        if (level <= 10) return '#ff4500';
+        return '#800080';
+    }
+
+    function showExplosion(x,y) {
+        let radius = 0;
+        function anim() {
+            ctx.save();
+            ctx.globalAlpha = 1 - radius/60;
+            ctx.fillStyle = 'orange';
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI*2);
+            ctx.fill();
+            ctx.restore();
+            radius += 3;
+            if (radius < 60) requestAnimationFrame(anim);
+            else drawScene();
+        }
+        anim();
+    }
+
+    function respawnTargets() {
+        // For dragon levels, reset hits
+        const theme = getTheme();
+        if (theme.name === 'Dragon') {
+            dragon.hitsRemaining = 3;
+            dragon.x = canvas.width / 2 + (Math.random() - 0.5) * 100;
+            dragon.y = topY + (Math.random() - 0.5) * 100;
+            dragonVelX = 0;
+            dragonVelY = 0;
+            dragon.moveTimer = 0;
+        } else {
+            // For castle and training levels, place targets with minimum spacing
+            const positions = [];
+            const minSpacing = 80;
+            for (let i = 0; i < targets.length; i++) {
+                let x;
+                let validPosition = false;
+                while (!validPosition) {
+                    x = Math.random() * (canvas.width - 100) + 50;
+                    validPosition = positions.every(pos => Math.abs(x - pos) >= minSpacing);
+                }
+                positions.push(x);
+                targets[i].x = x;
+                // For castle and training levels, position targets with varied heights
+                if (theme.name === 'Castle') {
+                    targets[i].y = 80 + Math.random() * 140;  // Random y between 80-220 (on the castle)
+                } else {
+                    targets[i].y = topY + (Math.random() - 0.5) * 80;  // Vary y from topY ±40
+                }
+                targets[i].hit = false;
+            }
+        }
+    }
+
+    function resetLevel() {
+        // Stay on same level, reset targets
+        tries = 5;
+        targetsHit = 0;
+        gameActive = false;
+        respawnTargets();
+        drawScene();
+    }
+
+    function completeLevelRound() {
+        const theme = getTheme();
+        // Check if player succeeded
+        let success = false;
+        if (theme.name === 'Dragon') {
+            success = dragon.hitsRemaining === 0;
+        } else {
+            success = targets.every(t => t.hit);
+        }
+        
+        if (success) {
+            // Special message for defeating the final dragon
+            if (level === 15 && theme.name === 'Dragon') {
+                feedbackEl.textContent = '🎉 CONGRATULATIONS! YOU\'VE SLAYED THE DRAGON! 🎉 Well Done, Legend!';
+                levelSpan.textContent = level;
+                setTimeout(() => {
+                    level = 1;
+                    tries = 5;
+                    targetsHit = 0;
+                    gameActive = false;
+                    respawnTargets();
+                    levelSpan.textContent = level;
+                    feedbackEl.textContent = '';
+                    drawScene();
+                }, 3000);
+                return;
+            } else {
+                feedbackEl.textContent = 'Well done Archer!';
+                level++;
+                if (level > 15) level = 1;
+                tries = 5;
+                targetsHit = 0;
+                gameActive = false;
+                respawnTargets();
+                levelSpan.textContent = level;
+            }
+        } else {
+            // Not successful - show score and reset same level
+            if (theme.name === 'Dragon') {
+                feedbackEl.textContent = `Valiant effort! ${3 - dragon.hitsRemaining} of 3 hits. Try Again!`;
+            } else {
+                feedbackEl.textContent = `Valiant effort! ${targetsHit} of 3 targets. Try Again!`;
+            }
+            setTimeout(resetLevel, 2000);
+            return;
+        }
+        drawScene();
+    }
+    
+    function finishShot(finalX, finalY, hitTarget) {
+        tries--;
+        totalArrowsShot++;
+        const theme = getTheme();
+        
+        if (theme.name === 'Dragon') {
+            // Check if hit the dragon (generous hit radius)
+            const distToDragon = Math.hypot(finalX - dragon.x, finalY - dragon.y);
+            if (distToDragon < dragon.width/2 + 30) {
+                hitTarget = true;
+                dragon.hitsRemaining--;
+                totalHits++;
+            }
+            
+            if (hitTarget) {
+                feedbackEl.textContent = `Hit! Hits remaining: ${dragon.hitsRemaining}, Tries left: ${tries}`;
+                if (level > 10) showExplosion(finalX, finalY);
+            } else {
+                feedbackEl.textContent = `Miss! Tries left: ${tries}`;
+            }
+        } else {
+            // Regular target hit detection (training and castle levels)
+            if (hitTarget) {
+                totalHits++;
+                feedbackEl.textContent = `Hit! Tries left: ${tries}`;
+                if (level > 10) showExplosion(finalX, finalY);
+                // mark the closest target as hit
+                let closestTarget = null;
+                let closestDist = 30;
+                targets.forEach(t => {
+                    const dist = Math.hypot(t.x - finalX, t.y - finalY);
+                    if (dist < closestDist) {
+                        closestDist = dist;
+                        closestTarget = t;
+                    }
+                });
+                if (closestTarget) closestTarget.hit = true;
+                targetsHit++;
+            } else {
+                feedbackEl.textContent = `Miss! Tries left: ${tries}`;
+            }
+        }
+        
+        animating = false;
+        
+        // Check if level is complete
+        if (theme.name === 'Dragon') {
+            if (dragon.hitsRemaining === 0 || tries === 0) {
+                setTimeout(completeLevelRound, 1500);
+            } else {
+                drawScene();
+            }
+        } else {
+            if (targets.every(t => t.hit) || tries === 0) {
+                setTimeout(completeLevelRound, 1500);
+            } else {
+                drawScene();
+            }
+        }
+    }
+
+    function shootArrow() {
+        const dx = pullX - startX;
+        const dy = pullY - startY;
+        const speed = Math.min(20, dy / 2);
+        const slope = -dx / dy;
+        let arrowX = startX;
+        let arrowY = startY;
+        
+        // Calculate where arrow should stop based on pull distance
+        const maxPull = 150;
+        const pullFraction = Math.min(1, dy / maxPull);
+        const baseY = 140;
+        const targetY = baseY - (pullFraction * 180);
+        
+        animating = true;
+        function animate() {
+            if (!animating) return;
+            arrowY -= speed;
+            arrowX += speed * slope;
+            drawScene();
+            // draw arrow pointing up
+            ctx.strokeStyle = arrowColor();
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(arrowX, arrowY+10);
+            ctx.lineTo(arrowX, arrowY);
+            ctx.stroke();
+            ctx.fillStyle = arrowColor();
+            ctx.beginPath();
+            ctx.moveTo(arrowX-3, arrowY);
+            ctx.lineTo(arrowX+3, arrowY);
+            ctx.lineTo(arrowX, arrowY-6);
+            ctx.closePath();
+            ctx.fill();
+
+            // flame trail
+            if (level > 5 && level <= 10) {
+                ctx.fillStyle = 'rgba(255,165,0,0.7)';
+                ctx.beginPath();
+                ctx.arc(arrowX, arrowY+8, 6, 0, Math.PI*2);
+                ctx.fill();
+            }
+
+            // Check for hits during arrow flight (not just at end)
+            const theme = getTheme();
+            let hitTarget = false;
+            
+            if (theme.name === 'Dragon') {
+                // Check if arrow hit the moving dragon
+                const distToDragon = Math.hypot(arrowX - dragon.x, arrowY - dragon.y);
+                hitTarget = distToDragon < dragon.width/2 + 30;
+            } else {
+                // Check regular targets (training and castle levels)
+                hitTarget = targets.some(t => Math.abs(arrowX - t.x) <= 25 && Math.abs(arrowY - t.y) <= 25);
+            }
+            
+            if (hitTarget) {
+                // Hit detected - stop animation and process
+                finishShot(arrowX, arrowY, true);
+            } else if (arrowY <= targetY) {
+                // Arrow reached predicted impact distance
+                finishShot(arrowX, arrowY, false);
+            } else if (arrowY < 0) {
+                // Arrow went off screen (shouldn't happen with targetY check)
+                finishShot(arrowX, arrowY, false);
+            } else {
+                requestAnimationFrame(animate);
+            }
+        }
+        animate();
+    }
+
+    canvas.addEventListener('pointerdown', e => {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        if (Math.hypot(x-startX, y-startY) < 50 && !animating) {
+            gameActive = true;
+            dragging = true;
+            pullX = x;
+            pullY = y;
+            drawScene();
+        }
+    });
+    canvas.addEventListener('pointermove', e => {
+        if (!dragging) return;
+        const rect = canvas.getBoundingClientRect();
+        let x = e.clientX - rect.left;
+        let y = e.clientY - rect.top;
+        if (y < startY) y = startY;
+        pullX = x;
+        pullY = y;
+        drawScene();
+    });
+    canvas.addEventListener('pointerup', e => {
+        if (!dragging) return;
+        dragging = false;
+        const dy = pullY - startY;
+        if (dy > 5 && !animating) {
+            shootArrow();
+        }
+        pullX = startX;
+        pullY = startY;
+        drawScene();
+    });
+    canvas.addEventListener('pointerleave', e => {
+        if (dragging) {
+            dragging = false;
+            pullX = startX;
+            pullY = startY;
+            drawScene();
+        }
+    });
+
+    levelSpan.textContent = level;
+    drawScene();
+    
+    // Continuous animation loop for dragon movement and scene updates
+    function mainLoop() {
+        const theme = getTheme();
+        if (theme.name === 'Dragon' && gameActive && !animating) {
+            // Move dragon independently during dragon levels when not actively animating
+            dragon.moveTimer++;
+            // Speed increases with level: level 11 is slowest, level 15 is fastest
+            const speedFactor = (level - 10) / 5;  // 0.2 to 1.0 for levels 11-15
+            const maxVel = 1.5 * speedFactor;
+            
+            if (dragon.moveTimer > 20) {
+                // Move on both x and y axes
+                dragonVelX = (Math.random() - 0.5) * maxVel * 2;
+                dragonVelY = (Math.random() - 0.5) * maxVel * 2;
+                dragon.moveTimer = 0;
+            }
+            dragon.x += dragonVelX;
+            dragon.y += dragonVelY;
+            
+            // Keep dragon in bounds (both axes)
+            if (dragon.x < 70) { dragon.x = 70; dragonVelX *= -1; }
+            if (dragon.x > canvas.width - 70) { dragon.x = canvas.width - 70; dragonVelX *= -1; }
+            if (dragon.y < 50) { dragon.y = 50; dragonVelY *= -1; }
+            if (dragon.y > canvas.height - 150) { dragon.y = canvas.height - 150; dragonVelY *= -1; }
+            
+            drawScene();
+        }
+        requestAnimationFrame(mainLoop);
+    }
+    mainLoop();
+    
+    // Level picker for testing
+    const levelPicker = document.getElementById('level-picker');
+    const levelDisplay = document.getElementById('level-display');
+    const resetLevelBtn = document.getElementById('reset-level-btn');
+    const themeBtns = document.querySelectorAll('.theme-btn');
+    
+    function setLevel(newLevel) {
+        level = Math.max(1, Math.min(20, newLevel));
+        tries = 5;
+        targetsHit = 0;
+        gameActive = false;
+        animating = false;
+        pullX = startX;
+        pullY = startY;
+        dragging = false;
+        respawnTargets();
+        levelSpan.textContent = level;
+        levelPicker.value = level;
+        levelDisplay.textContent = level;
+        feedbackEl.textContent = '';
+        drawScene();
+    }
+    
+    if (levelPicker) {
+        levelPicker.addEventListener('input', (e) => {
+            setLevel(parseInt(e.target.value));
+        });
+    }
+    
+    if (resetLevelBtn) {
+        resetLevelBtn.addEventListener('click', () => {
+            setLevel(level);
+        });
+    }
+    
+    themeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            setLevel(parseInt(btn.getAttribute('data-level')));
+        });
+    });
+}
+
 // Treasure chest popup logic
 const treasureChest = document.querySelector('.treasure-chest');
 const treasurePopup = document.getElementById('treasurePopup');
@@ -1439,4 +1957,5 @@ function rebuildGeographyGameUI() {
 document.addEventListener('DOMContentLoaded', () => {
     // Other initialization code here...
     initGeographyGame();
+    initArcheryGame();
 });

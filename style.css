@@ -237,6 +237,32 @@
 #wm-start:hover, #wm-close:hover {
     background: #ffe082;
 }
+/* Archery game styles */
+.archery-container {
+    position: relative;
+    background: #e8f5e9;
+    border: 4px solid #388e3c;
+    border-radius: 1.5rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    padding: 2rem;
+    max-width: 500px;
+    margin: 2rem auto;
+    text-align: center;
+}
+
+#archery-canvas {
+    width: 100%;
+    height: auto;
+    background: #fff;
+    border: 2px solid #ccc;
+}
+
+#archery-feedback {
+    color: #388e3c;
+    font-size: 1.1rem;
+    margin-top: 0.5rem;
+}
+
 /* Treasure chest styling */
 
 .treasure-chest {
