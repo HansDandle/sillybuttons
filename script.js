@@ -281,7 +281,9 @@ function initArcheryGame() {
     const canvas = document.getElementById('archery-canvas');
     const levelSpan = document.getElementById('archery-level');
     const feedbackEl = document.getElementById('archery-feedback');
-    if (!canvas || !levelSpan || !feedbackEl) return;
+    const congratsModal = document.getElementById('archery-congrats-modal');
+    const startOverBtn = document.getElementById('archery-start-over-btn');
+    if (!canvas || !levelSpan || !feedbackEl || !congratsModal || !startOverBtn) return;
 
     const ctx = canvas.getContext('2d');
     const startX = canvas.width / 2;
@@ -309,8 +311,11 @@ function initArcheryGame() {
         y: topY,
         hitsRemaining: 3,
         moveTimer: 0,
-        width: 100,
-        height: 80
+        width: 120,
+        height: 96,
+        rotation: 0,
+        falling: false,
+        fallSpeed: 0
     };
     
     let dragonVelX = 0;
@@ -352,11 +357,33 @@ function initArcheryGame() {
             });
         } else if (theme.name === 'Dragon' && dragonImg.complete) {
             // Draw moving dragon (movement is handled in mainLoop)
-            ctx.drawImage(dragonImg, dragon.x - dragon.width/2, dragon.y - dragon.height/2, dragon.width, dragon.height);
+            
+            // Draw rotation and falling animation if defeated
+            if (dragon.hitsRemaining === 0 && !dragon.drawn) {
+                dragon.falling = true;
+                dragon.drawn = true;
+            }
+            
+            if (dragon.falling) {
+                ctx.save();
+                ctx.translate(dragon.x, dragon.y);
+                dragon.rotation += 15;  // Rotate 15 degrees per frame
+                if (dragon.rotation > 90) dragon.rotation = 90;  // Stop at 90 degrees
+                ctx.rotate((dragon.rotation * Math.PI) / 180);
+                ctx.drawImage(dragonImg, -dragon.width/2, -dragon.height/2, dragon.width, dragon.height);
+                ctx.restore();
+                
+                // Fall to ground
+                dragon.fallSpeed += 2;
+                dragon.y += dragon.fallSpeed;
+            } else {
+                ctx.drawImage(dragonImg, dragon.x - dragon.width/2, dragon.y - dragon.height/2, dragon.width, dragon.height);
+            }
+            
             ctx.font = 'bold 14px Arial';
             ctx.fillStyle = '#d32f2f';
             ctx.textAlign = 'center';
-            ctx.fillText(`Hits: ${3 - dragon.hitsRemaining}`, dragon.x, dragon.y + dragon.height/2 + 20);
+            ctx.fillText(`Hits: ${3 - dragon.hitsRemaining}`, dragon.x, dragon.y - dragon.height/2 - 15);
             ctx.textAlign = 'left';
         } else if (theme.name === 'Victory') {
             ctx.fillStyle = '#ffd700';
@@ -412,11 +439,24 @@ function initArcheryGame() {
                 // Crosshair starts at mid-target height, moves UP based on pull distance
                 const maxPull = 150;
                 const pullFraction = Math.min(1, dy / maxPull);
-                const baseY = 140;  // Starting position lower on screen
-                const impactY = baseY - (pullFraction * 180);  // Moves UP up to 180 pixels
+                const baseY = 250;  // Starting position lower on screen
+                const impactY = baseY - (pullFraction * 280);  // Moves UP up to 280 pixels
                 let xPred = startX + slope * (startY - impactY);
                 xPred = Math.max(0, Math.min(canvas.width, xPred));
-                ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+                
+                // Draw black outline (bold background)
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(xPred - 10, impactY + 10);
+                ctx.lineTo(xPred + 10, impactY + 10);
+                ctx.moveTo(xPred, impactY + 20);
+                ctx.lineTo(xPred, impactY);
+                ctx.stroke();
+                
+                // Draw red center (bold)
+                ctx.strokeStyle = '#ff0000';
+                ctx.lineWidth = 2;
                 ctx.beginPath();
                 ctx.moveTo(xPred - 10, impactY + 10);
                 ctx.lineTo(xPred + 10, impactY + 10);
@@ -460,6 +500,10 @@ function initArcheryGame() {
             dragonVelX = 0;
             dragonVelY = 0;
             dragon.moveTimer = 0;
+            dragon.rotation = 0;
+            dragon.falling = false;
+            dragon.fallSpeed = 0;
+            dragon.drawn = false;
         } else {
             // For castle and training levels, place targets with minimum spacing
             const positions = [];
@@ -506,18 +550,7 @@ function initArcheryGame() {
         if (success) {
             // Special message for defeating the final dragon
             if (level === 15 && theme.name === 'Dragon') {
-                feedbackEl.textContent = '🎉 CONGRATULATIONS! YOU\'VE SLAYED THE DRAGON! 🎉 Well Done, Legend!';
-                levelSpan.textContent = level;
-                setTimeout(() => {
-                    level = 1;
-                    tries = 5;
-                    targetsHit = 0;
-                    gameActive = false;
-                    respawnTargets();
-                    levelSpan.textContent = level;
-                    feedbackEl.textContent = '';
-                    drawScene();
-                }, 3000);
+                congratsModal.style.display = 'block';
                 return;
             } else {
                 feedbackEl.textContent = 'Well done Archer!';
@@ -550,7 +583,7 @@ function initArcheryGame() {
         if (theme.name === 'Dragon') {
             // Check if hit the dragon (generous hit radius)
             const distToDragon = Math.hypot(finalX - dragon.x, finalY - dragon.y);
-            if (distToDragon < dragon.width/2 + 30) {
+            if (distToDragon < dragon.width/2 + 50) {
                 hitTarget = true;
                 dragon.hitsRemaining--;
                 totalHits++;
@@ -614,8 +647,8 @@ function initArcheryGame() {
         // Calculate where arrow should stop based on pull distance
         const maxPull = 150;
         const pullFraction = Math.min(1, dy / maxPull);
-        const baseY = 140;
-        const targetY = baseY - (pullFraction * 180);
+        const baseY = 250;
+        const targetY = baseY - (pullFraction * 280);
         
         animating = true;
         function animate() {
@@ -653,7 +686,7 @@ function initArcheryGame() {
             if (theme.name === 'Dragon') {
                 // Check if arrow hit the moving dragon
                 const distToDragon = Math.hypot(arrowX - dragon.x, arrowY - dragon.y);
-                hitTarget = distToDragon < dragon.width/2 + 30;
+                hitTarget = distToDragon < dragon.width/2 + 50;
             } else {
                 // Check regular targets (training and castle levels)
                 hitTarget = targets.some(t => Math.abs(arrowX - t.x) <= 25 && Math.abs(arrowY - t.y) <= 25);
@@ -675,47 +708,69 @@ function initArcheryGame() {
         animate();
     }
 
-    canvas.addEventListener('pointerdown', e => {
+    canvas.addEventListener('pointerdown', handleInput);
+    canvas.addEventListener('pointermove', handleInput);
+    canvas.addEventListener('pointerup', handleInput);
+    canvas.addEventListener('pointercancel', handleInput);
+    canvas.addEventListener('touchstart', handleInput, { passive: false });
+    canvas.addEventListener('touchmove', handleInput, { passive: false });
+    canvas.addEventListener('touchend', handleInput, { passive: false });
+    
+    function handleInput(e) {
         const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        if (Math.hypot(x-startX, y-startY) < 50 && !animating) {
-            gameActive = true;
-            dragging = true;
+        let clientX, clientY;
+        
+        // Handle touch events - touchend uses changedTouches, others use touches
+        if (e.type.startsWith('touch')) {
+            const touches = e.type === 'touchend' ? e.changedTouches : e.touches;
+            if (!touches || touches.length === 0) return;
+            clientX = touches[0].clientX;
+            clientY = touches[0].clientY;
+            // Only preventDefault for touchmove and touchstart to avoid issues
+            if (e.type === 'touchstart' || e.type === 'touchmove') {
+                e.preventDefault();
+            }
+        } 
+        // Handle pointer events
+        else if (e.clientX !== undefined && e.clientY !== undefined) {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        } else {
+            return;
+        }
+        
+        // Account for canvas scaling (CSS display size vs internal resolution)
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const x = (clientX - rect.left) * scaleX;
+        const y = (clientY - rect.top) * scaleY;
+        
+        if (e.type === 'pointerdown' || e.type === 'touchstart') {
+            if (Math.hypot(x - startX, y - startY) < 50 && !animating) {
+                gameActive = true;
+                dragging = true;
+                pullX = x;
+                pullY = y;
+                drawScene();
+            }
+        } else if (e.type === 'pointermove' || e.type === 'touchmove') {
+            if (!dragging) return;
+            if (y < startY) y = startY;
             pullX = x;
             pullY = y;
             drawScene();
-        }
-    });
-    canvas.addEventListener('pointermove', e => {
-        if (!dragging) return;
-        const rect = canvas.getBoundingClientRect();
-        let x = e.clientX - rect.left;
-        let y = e.clientY - rect.top;
-        if (y < startY) y = startY;
-        pullX = x;
-        pullY = y;
-        drawScene();
-    });
-    canvas.addEventListener('pointerup', e => {
-        if (!dragging) return;
-        dragging = false;
-        const dy = pullY - startY;
-        if (dy > 5 && !animating) {
-            shootArrow();
-        }
-        pullX = startX;
-        pullY = startY;
-        drawScene();
-    });
-    canvas.addEventListener('pointerleave', e => {
-        if (dragging) {
+        } else if (e.type === 'pointerup' || e.type === 'pointercancel' || e.type === 'touchend') {
+            if (!dragging) return;
             dragging = false;
+            const dy = pullY - startY;
+            if (dy > 5 && !animating) {
+                shootArrow();
+            }
             pullX = startX;
             pullY = startY;
             drawScene();
         }
-    });
+    }
 
     levelSpan.textContent = level;
     drawScene();
@@ -723,28 +778,31 @@ function initArcheryGame() {
     // Continuous animation loop for dragon movement and scene updates
     function mainLoop() {
         const theme = getTheme();
-        if (theme.name === 'Dragon' && gameActive && !animating) {
-            // Move dragon independently during dragon levels when not actively animating
+        if (theme.name === 'Dragon' && gameActive && !animating && !dragon.falling) {
+            // Move dragon independently during dragon levels when not actively animating and not falling
             dragon.moveTimer++;
             // Speed increases with level: level 11 is slowest, level 15 is fastest
             const speedFactor = (level - 10) / 5;  // 0.2 to 1.0 for levels 11-15
-            const maxVel = 1.5 * speedFactor;
+            const maxVel = 3 * speedFactor;  // Much faster (was 1.5)
             
-            if (dragon.moveTimer > 20) {
-                // Move on both x and y axes
-                dragonVelX = (Math.random() - 0.5) * maxVel * 2;
-                dragonVelY = (Math.random() - 0.5) * maxVel * 2;
+            if (dragon.moveTimer > 10) {  // Change direction more often (was 20)
+                // Move on both x and y axes with more velocity variance
+                dragonVelX = (Math.random() - 0.5) * maxVel * 3;
+                dragonVelY = (Math.random() - 0.5) * maxVel * 3;
                 dragon.moveTimer = 0;
             }
             dragon.x += dragonVelX;
             dragon.y += dragonVelY;
             
-            // Keep dragon in bounds (both axes)
-            if (dragon.x < 70) { dragon.x = 70; dragonVelX *= -1; }
-            if (dragon.x > canvas.width - 70) { dragon.x = canvas.width - 70; dragonVelX *= -1; }
-            if (dragon.y < 50) { dragon.y = 50; dragonVelY *= -1; }
-            if (dragon.y > canvas.height - 150) { dragon.y = canvas.height - 150; dragonVelY *= -1; }
+            // Keep dragon in bounds (both axes) - much more expanded bounds
+            if (dragon.x < 60) { dragon.x = 60; dragonVelX *= -1; }
+            if (dragon.x > canvas.width - 60) { dragon.x = canvas.width - 60; dragonVelX *= -1; }
+            if (dragon.y < 40) { dragon.y = 40; dragonVelY *= -1; }
+            if (dragon.y > canvas.height - 80) { dragon.y = canvas.height - 80; dragonVelY *= -1; }
             
+            drawScene();
+        } else if (theme.name === 'Dragon' && gameActive && dragon.falling) {
+            // Continue drawing while dragon is falling
             drawScene();
         }
         requestAnimationFrame(mainLoop);
@@ -783,6 +841,22 @@ function initArcheryGame() {
     if (resetLevelBtn) {
         resetLevelBtn.addEventListener('click', () => {
             setLevel(level);
+        });
+    }
+    
+    // Start Over button from congratulations modal
+    if (startOverBtn) {
+        startOverBtn.addEventListener('click', () => {
+            congratsModal.style.display = 'none';
+            level = 1;
+            tries = 5;
+            targetsHit = 0;
+            gameActive = false;
+            animating = false;
+            respawnTargets();
+            levelSpan.textContent = level;
+            feedbackEl.textContent = '';
+            drawScene();
         });
     }
     
